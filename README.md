@@ -6,8 +6,10 @@
 
 - **任务即工作空间** - 每个任务文件夹包含该任务的所有文档
 - **分支自动关联** - 通过当前 Git 分支自动定位任务
+- **支持不同分支名** - 各仓库可以使用不同的分支名，自动检测并记录
 - **按需创建文档** - 需要什么文档就创建什么，不被不需要的文档干扰
 - **仓库类型标注** - 明确标注前端/后端、PC/移动端，快速定位
+- **智能文档联动** - 自动检测文档差异并智能提示，无需手动同步
 
 ## 适用场景
 
@@ -63,10 +65,11 @@ cp -r sg-task ~/.claude/skills/
 
 1. **极简起步** - 创建任务只生成 meta.md 和 README.md
 2. **按需扩展** - 需要什么文档就创建什么
-3. **分支驱动** - 通过 Git 分支自动关联任务
+3. **分支驱动** - 通过 Git 分支自动关联任务，各仓库分支名可不同
 4. **类型清晰** - 明确标注仓库类型（前端/后端、PC/移动）
 5. **上下文保持** - 新开窗口也能自动识别任务
 6. **智能推断** - 通过对话自动更新进度，减少手动操作
+7. **文档联动** - 自动检测文档差异并智能提示
 
 ## 目录结构
 
@@ -93,6 +96,38 @@ sg-task/
 Claude：✅ 已自动更新 development.md
       - [x] 登录接口
       📝 已添加到更新日志：2024-01-28 登录接口开发完成
+```
+
+## 支持不同分支名
+
+在实际开发中，不同仓库可能使用不同的分支命名规范。sg-task 会自动检测每个仓库的当前分支并记录：
+
+```bash
+# 用户在各仓库创建不同名称的分支
+cd backend && git checkout -b feature/login-v2
+cd ../mobile && git checkout -b feature/login
+cd ../pc && git checkout -b feature/login-page
+
+# 创建任务时，自动检测各仓库分支
+用户：/sg-task create 优化登录
+
+Claude：正在检测各仓库分支...
+✅ backend: feature/login-v2
+✅ mobile: feature/login
+✅ pc: feature/login-page
+
+✅ 任务已创建，meta.md 记录了各仓库对应的分支
+```
+
+任务元数据示例：
+```yaml
+repositories:
+  - name: backend
+    branch: feature/login-v2    # 后端分支名
+  - name: mobile
+    branch: feature/login       # 移动端分支名
+  - name: pc
+    branch: feature/login-page  # PC端分支名
 ```
 
 ## 示例项目结构

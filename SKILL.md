@@ -53,14 +53,20 @@ created_at: 2024-01-28
 repositories:
   - name: pf-backend
     type: backend
-    branch: feature/login-optimization
+    branch: feature/login-opt        # 后端分支名
     path: ../pf-backend
 
   - name: senguo-pf-easy-mobile
     type: frontend
     platform: mobile
-    branch: feature/login-optimization
+    branch: feature/login            # 移动端分支名（可以不同）
     path: ../senguo-pf-easy-mobile
+
+  - name: senguo-pf-manage-frontend
+    type: frontend
+    platform: pc
+    branch: feature/login-page-v2    # PC端分支名（可以不同）
+    path: ../senguo-pf-manage-frontend
 ---
 ```
 
@@ -93,11 +99,11 @@ platform: mobile
 
 **流程：**
 
-1. 检测当前 Git 分支
-2. 询问任务涉及的仓库
+1. 询问任务涉及的仓库
+2. **自动检测每个仓库的当前 Git 分支**
 3. 收集任务信息（名称、描述等）
 4. 创建任务目录：`.tasks/YYYY-MM-DD_任务名称/`
-5. 生成 `meta.md`（自动填充分支和仓库信息）
+5. 生成 `meta.md`（自动填充分支和仓库信息，**支持不同仓库不同分支名**）
 6. 生成 `README.md`（任务概览）
 7. 根据仓库类型给出智能建议
 
@@ -107,14 +113,16 @@ platform: mobile
 
 Claude：正在创建任务...
 
-✅ 当前分支：feature/login-optimization
-
 请选择涉及仓库：
 - [ ] pf-backend（后端）
 - [ ] senguo-pf-easy-mobile（移动端前端）
 - [ ] senguo-pf-manage-frontend（PC端前端）
 
-[用户选择后]
+[用户选择：pf-backend + senguo-pf-easy-mobile]
+
+正在检测各仓库分支...
+✅ pf-backend: feature/login-opt
+✅ senguo-pf-easy-mobile: feature/login
 
 ✅ 已创建任务：2024-01-28_优化登录
    - meta.md（任务元数据）
@@ -122,6 +130,21 @@ Claude：正在创建任务...
 
 💡 提示：检测到涉及前后端，建议创建接口文档用于联调
    使用 /sg-task doc api 创建
+```
+
+**自动检测分支逻辑：**
+```python
+def detect_branches(selected_repos):
+    """自动检测每个仓库的当前分支"""
+    result = {}
+    for repo in selected_repos:
+        repo_path = repo['path']
+        # 切换到仓库目录
+        os.chdir(repo_path)
+        # 获取当前分支
+        branch = git_branch_show_current()
+        result[repo['name']] = branch
+    return result
 ```
 
 ---
@@ -600,15 +623,31 @@ Claude：✅ 任务完成！
 ### 1. 开始新任务
 
 ```bash
-# 1. 用户在各仓库中手动创建分支
-cd pf-backend && git checkout -b feature/login-optimization
-cd ../senguo-pf-easy-mobile && git checkout -b feature/login-optimization
+# 1. 用户在各仓库中手动创建分支（分支名可以不同）
+cd pf-backend && git checkout -b feature/login-v2
+cd ../senguo-pf-easy-mobile && git checkout -b feature/login
+cd ../senguo-pf-manage-frontend && git checkout -b feature/login-page
 
 # 2. 创建任务
 用户：/sg-task create 优化登录功能
 
-# 3. skill 自动检测分支并创建任务
-Claude：✅ 已创建任务：2024-01-28_优化登录
+# 3. 选择涉及仓库
+Claude：请选择涉及仓库：
+- [ ] pf-backend（后端）
+- [ ] senguo-pf-easy-mobile（移动端前端）
+- [ ] senguo-pf-manage-frontend（PC端前端）
+
+用户：选择后端和移动端
+
+# 4. skill 自动检测各仓库分支并创建任务
+Claude：正在检测各仓库分支...
+✅ pf-backend: feature/login-v2
+✅ senguo-pf-easy-mobile: feature/login
+
+✅ 已创建任务：2024-01-28_优化登录
+   meta.md 已记录：
+   - pf-backend → feature/login-v2
+   - senguo-pf-easy-mobile → feature/login
 ```
 
 ### 2. 按需创建文档
