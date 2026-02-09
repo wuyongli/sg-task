@@ -1,0 +1,52 @@
+# sg-task 仓库配置文件示例
+#
+# 实际配置文件位置：~/.claude/sg-task/config.yaml
+# 本文件仅供参考，不需要修改
+
+projects:
+  森果批发系统:
+    repositories:
+      # 后端仓库
+      - name: pf-backend
+        type: backend
+        path: /Users/wuyongli/Documents/sg-project/pf-backend
+
+      # 移动端App
+      - name: senguo-pf-easy-mobile
+        type: mobile
+        path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
+
+      # PC端前端
+      - name: senguo-pf-manage-frontend
+        type: pc
+        path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
+
+      # SDK或其他工具库
+      - name: senguo-finance-sdk
+        type: other
+        path: /Users/wuyongli/Documents/sg-project/senguo-finance-sdk
+
+  商户中心:
+    repositories:
+      # 后端仓库
+      - name: senguo-merchantcenter-backend
+        type: backend
+        path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
+
+      # 小程序
+      - name: merchant-mini-program
+        type: mini-program
+        path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
+
+# 仓库类型说明：
+# backend       - 后端
+# pc            - PC端前端
+# mobile        - 移动端App
+# mini-program  - 小程序
+# native        - 原生应用
+# other         - 其他类型（也参与任务管理）
+
+# 使用说明：
+# 1. 首次使用 sg-task 时会自动创建 ~/.claude/sg-task/config.yaml
+# 2. 可以直接编辑该文件手动配置
+# 3. 每次使用时会自动检测新仓库和缺失仓库
