@@ -45,6 +45,9 @@ cp -r sg-task ~/.claude/skills/
 # 列出所有任务
 /sg-task list
 
+# 查看任务进度
+/sg-task progress
+
 # 创建文档
 /sg-task doc development
 /sg-task doc api

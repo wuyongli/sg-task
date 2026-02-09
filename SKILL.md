@@ -167,6 +167,7 @@ Claude：📋 当前任务：优化登录功能
 - api.md（接口文档）
 
 💡 可用命令：
+- /sg-task progress - 查看任务进度（需要先创建 development.md）
 - /sg-task doc development - 创建开发计划与进度
 - /sg-task doc test - 创建测试用例
 - /sg-task doc api - 创建接口文档
@@ -255,6 +256,72 @@ Claude：正在生成测试文档...
 💡 提示：检测到该任务涉及前后端，建议也创建：
    - api.md（接口文档）- 前后端联调必备
    要一起创建吗？(y/n)
+```
+
+---
+
+### 查看任务进度
+
+```bash
+/sg-task progress
+```
+
+**通过读取 development.md 计算任务完成百分比。**
+
+**流程：**
+
+1. 通过当前分支定位任务
+2. 读取 `development.md` 文件
+3. 统计各模块的完成情况
+4. 计算整体进度百分比
+
+**示例：**
+```bash
+用户：/sg-task progress
+
+Claude：📊 任务进度：优化登录功能
+
+## 整体进度：████████░░ 80%
+
+### 🔧 后端开发：██████████ 100%
+- [x] 登录接口
+- [x] 注册接口
+- [x] JWT token 生成
+
+### 📱 移动端开发：██████░░░░ 60%
+- [x] 登录页面 UI
+- [x] 注册页面 UI
+- [ ] 表单验证
+- [ ] 记住密码交互
+
+### 🧪 测试：███░░░░░░░ 30%
+- [x] 登录功能测试
+- [ ] 注册功能测试
+- [ ] 异常场景测试
+
+---
+📝 统计：
+- 总任务：12 个
+- 已完成：7 个
+- 进行中：0 个
+- 未开始：5 个
+```
+
+**进度计算逻辑：**
+```python
+def calculate_progress(section):
+    tasks = re.findall(r'- \[([ x])\]', section)
+    if not tasks:
+        return 0, 0, 0
+    completed = tasks.count('x')
+    total = len(tasks)
+    percentage = (completed / total) * 100 if total > 0 else 0
+    return completed, total, percentage
+
+def generate_progress_bar(percentage):
+    filled = int(percentage / 10)
+    bar = '█' * filled + '░' * (10 - filled)
+    return f"{bar} {percentage:.0f}%"
 ```
 
 ---
@@ -572,7 +639,28 @@ Claude：✅ 已自动更新 development.md
       📝 已添加到更新日志：2024-01-28 登录接口开发完成
 ```
 
-### 5. 完成任务
+### 5. 查看任务进度
+
+```bash
+用户：/sg-task progress
+
+Claude：📊 任务进度：优化登录功能
+
+## 整体进度：████████░░ 80%
+
+### 🔧 后端开发：██████████ 100%
+- [x] 登录接口
+- [x] 注册接口
+
+### 📱 移动端开发：██████░░░░ 60%
+- [x] 登录页面 UI
+- [ ] 表单验证
+
+---
+📝 统计：总任务 12 个，已完成 7 个
+```
+
+### 6. 完成任务
 
 ```bash
 用户：/sg-task complete
@@ -649,6 +737,91 @@ Claude：测试通过！💡 要更新任务进度吗？
    要标记为完成吗？(y/n)
 ```
 
+### 文档智能联动
+
+自动检测产品文档与开发计划的差异，智能提示更新：
+
+**触发场景 1：修改产品文档**
+```bash
+用户：在 product.md 中添加"记住密码"功能需求
+
+Claude：✅ 已更新产品文档
+
+💡 智能提示：
+检测到新增功能「记住密码」
+
+development.md 中可能需要添加：
+- 后端：记住密码接口、token 延长逻辑
+- 移动端：记住密码选项、自动登录
+
+需要我现在帮你更新开发计划吗？
+（稍后也可以说"更新开发计划"）
+```
+
+**触发场景 2：查看开发计划时**
+```bash
+用户：查看开发计划
+
+Claude：正在读取 development.md...
+
+⚠️ 发现差异：
+
+product.md 中有这些功能，但开发计划中缺失：
+- 记住密码功能（新增）
+- 找回密码功能（新增）
+
+💡 要不要帮你补充到开发计划？
+回复"添加"自动补全，或说"不用"跳过
+```
+
+**触发场景 3：完成开发任务**
+```bash
+用户：登录接口开发完成了
+
+Claude：✅ 已自动更新 development.md
+      - [x] 登录接口
+
+💡 检查产品文档时发现：
+product.md 中的「记住密码」功能还没有对应的开发任务
+
+要不要现在添加到开发计划？
+（这是一个遗漏的功能点）
+```
+
+**智能对比逻辑：**
+```python
+def smart_document_sync():
+    """智能文档联动（自动执行）"""
+
+    # 当 product.md 被编辑时
+    if product_modified:
+        missing = compare_product_to_dev()
+        if missing:
+            show_friendly_tip(
+                f"检测到 {len(missing)} 个新功能需要添加到开发计划",
+                auto_generate=True  # 自动生成任务建议
+            )
+
+    # 当 development.md 被查看时
+    if development_viewed:
+        orphans = find_missing_features()
+        if orphans:
+            show_friendly_tip(
+                f"产品文档中有 {len(orphans)} 个功能未添加到开发计划",
+                suggestions=generate_tasks(orphans)
+            )
+
+    # 提示风格：友好、可跳过
+    # 不强制、不打断、不记命令
+```
+
+**核心特性：**
+- 🤖 **全自动** - 无需用户执行命令，自动检测
+- 💡 **智能提示** - 只在需要时提醒，不打扰
+- 🎯 **上下文感知** - 根据当前操作判断是否提示
+- ✅ **可跳过** - 用户可选择忽略或稍后处理
+- 🔄 **双向同步** - 产品文档→开发计划，开发计划→产品文档
+
 ---
 
 ## 图标规范
@@ -673,3 +846,4 @@ Claude：测试通过！💡 要更新任务进度吗？
 4. **类型清晰** - 明确标注仓库类型（前端/后端、PC/移动）
 5. **上下文保持** - 新开窗口也能自动识别任务
 6. **智能推断** - 通过对话自动更新进度，减少手动操作
+7. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
