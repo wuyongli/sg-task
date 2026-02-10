@@ -13,6 +13,7 @@
 - **极简起始** - 创建任务只生成 meta.md，其他文档按需创建
 - **仓库类型标注** - 明确标注前端/后端、PC/移动端/小程序/原生，快速定位
 - **智能文档联动** - 自动检测文档差异并智能提示，无需手动同步
+- **自动 Git 备份** - 文档变更自动提交到 Git，形成完整的变更历史记录
 
 ## 适用场景
 
@@ -66,6 +67,9 @@ cp -r sg-task ~/.claude/skills/
 /sg-task doc api
 /sg-task doc test
 
+# 手动同步到 Git 仓库
+/sg-task sync
+
 # 完成任务
 /sg-task complete
 ```
@@ -85,6 +89,7 @@ cp -r sg-task ~/.claude/skills/
 9. **智能推断** - 通过对话自动更新进度，减少手动操作
 10. **文档联动** - 自动检测文档差异并智能提示
 11. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新
+12. **自动备份** - 任务文档自动提交到 Git，形成完整的变更历史记录
 
 ## 目录结构
 
@@ -115,6 +120,93 @@ Claude：✅ 已自动更新 development.md
       - [x] 登录接口
       📝 已添加到更新日志：2024-01-28 登录接口开发完成
 ```
+
+---
+
+## 🚀 自动 Git 同步
+
+sg-task 支持将任务文档自动提交到 Git 仓库，无需手动操作。
+
+### 功能说明
+
+当 `.tasks` 目录是 Git 仓库时，文档更新会自动提交并推送到远程仓库，确保每一次变更都被记录和备份。
+
+### 自动触发场景
+
+以下操作会自动触发 Git 同步：
+- 创建新文档（`/sg-task doc`）
+- 更新文档内容（Edit/Write 操作）
+- 更新任务进度（`/sg-task progress`）
+- 完成任务（`/sg-task complete`）
+- 添加/删除仓库（`/sg-task add-repo`、`/sg-task remove-repo`）
+
+### 配置方式
+
+编辑 `~/.claude/sg-task/config.yaml`：
+
+```yaml
+# Git 自动同步配置（可选）
+auto_commit: true           # 是否自动提交（默认: true）
+auto_push: true             # 是否自动推送（默认: true）
+commit_message_style: emoji # 提交信息风格：emoji / simple / detail
+```
+
+### 提交信息示例
+
+**Emoji 风格**（默认）：
+```
+✨ docs: 添加接口文档
+
+- 新增 api.md
+- 包含支付宝接口定义
+
+📦 任务: 2026-02-10_对接支付宝转账产品
+```
+
+**Simple 风格**：
+```
+docs: 添加接口文档
+```
+
+**Detail 风格**：
+```
+docs: 添加接口文档
+
+文件变更:
+- 新增: api.md
+- 任务ID: 2026-02-10_对接支付宝转账产品
+- 变更时间: 2026-02-10 14:30:00
+```
+
+### 错误处理
+
+| 错误场景 | 处理方式 |
+|---------|---------|
+| 不是 Git 仓库 | 静默跳过，不影响正常功能 |
+| 未配置远程仓库 | 仅提交本地，不推送 |
+| 推送失败 | 提示错误信息，但不中断任务 |
+| 网络不可达 | 仅提交本地，稍后可手动推送 |
+
+### 手动控制
+
+**临时禁用自动同步**：
+```bash
+用户：更新 development.md（不要提交）
+
+Claude：✅ 已更新 development.md
+      （已跳过 Git 同步）
+```
+
+**强制推送所有更改**：
+```bash
+用户：/sg-task sync
+
+Claude：🚀 正在同步到 Git...
+✅ 已提交 3 个文件更改
+✅ 已推送到远程仓库
+```
+
+---
 
 ## 支持不同分支名
 
@@ -179,6 +271,11 @@ repositories:
   - name: 商户后端              # 手动输入的名称
     type: backend
     path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
+
+# Git 自动同步配置（可选）
+auto_commit: true           # 是否自动提交文档变更（默认: true）
+auto_push: true             # 是否自动推送到远程（默认: true）
+commit_message_style: emoji # 提交信息风格：emoji / simple / detail
 ```
 
 **展示格式：** 在选择和显示仓库时，使用 `手动名称 (目录名, 类型)` 的格式，例如：
