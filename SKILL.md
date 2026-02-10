@@ -1,6 +1,6 @@
 ---
 name: sg-task
-description: 森果任务管理工具。帮助管理多仓库开发任务，每个任务是一个独立的工作空间，包含该任务的所有文档。通过 Git 分支自动关联任务，无需手动指定。支持按需创建产品文档、开发计划、接口文档、测试用例等。
+description: 森果任务管理工具。帮助管理多仓库开发任务，每个任务是一个独立的工作空间，包含该任务的所有文档。通过 Git 分支自动关联任务，无需手动指定。支持按需创建产品文档、开发计划、接口文档、测试用例等。支持自动 Git 备份，文档变更自动提交到远程仓库。
 ---
 
 # 森果任务管理工具 (sg-task)
@@ -16,6 +16,7 @@ description: 森果任务管理工具。帮助管理多仓库开发任务，每�
 - **手动仓库命名** - 用户自定义仓库名称（如"批发后端"、"商户前端"），灵活直观
 - **动态仓库配置** - 首次使用时自动扫描并配置，支持中途添加/删除仓库
 - **仓库类型标注** - 明确标注前端/后端、PC/移动端/小程序/原生，快速定位
+- **自动 Git 备份** - 文档变更自动提交到 Git，形成完整的变更历史记录
 
 ## 配置文件
 
@@ -49,6 +50,11 @@ repositories:
   - name: 商户小程序            # 手动输入的名称
     type: mini-program
     path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
+
+# Git 自动同步配置（可选）
+auto_commit: true           # 是否自动提交文档变更（默认: true）
+auto_push: true             # 是否自动推送到远程（默认: true）
+commit_message_style: emoji # 提交信息风格：emoji / simple / detail
 ```
 
 **展示格式：** 在选择和显示仓库时，使用 `手动名称 (目录名)` 的格式，例如：
@@ -70,6 +76,7 @@ repositories:
 - **自动检测新仓库** - 每次使用时自动扫描，发现新仓库会提示配置
 - **仓库缺失提醒** - 配置中的仓库不存在时会提示是否移除
 - **手动编辑** - 可直接编辑 `~/.claude/sg-task/config.yaml` 文件
+- **自动同步 Git** - 支持任务文档自动提交到 Git 仓库（详见"自动 Git 同步"章节）
 
 ## 目录结构
 
@@ -1119,6 +1126,200 @@ Claude：⚠️ 配置中的仓库不存在：
 
 ---
 
+---
+
+## 🚀 自动 Git 同步
+
+### 功能说明
+
+当 `.tasks` 目录是 Git 仓库时，sg-task 会在文档更新后自动提交并推送到远程仓库，确保任务文档的每一次变更都被记录和备份。
+
+### 配置方式
+
+**在配置文件中启用自动同步：**
+
+```yaml
+# ~/.claude/sg-task/config.yaml
+auto_commit: true           # 是否自动提交到 Git（默认: true）
+auto_push: true             # 是否自动推送到远程（默认: true）
+commit_message_style: emoji # 提交信息风格：emoji / simple / detail
+```
+
+### 配置选项说明
+
+| 选项 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `auto_commit` | boolean | true | 是否自动提交文档变更 |
+| `auto_push` | boolean | true | 是否自动推送到远程仓库 |
+| `commit_message_style` | string | emoji | 提交信息风格：emoji / simple / detail |
+
+### 自动触发场景
+
+以下操作会自动触发 Git 同步：
+
+1. **创建文档**：`/sg-task doc product`、`/sg-task doc api` 等
+2. **更新文档**：通过 Edit/Write 工具修改任务文档
+3. **更新进度**：`/sg-task progress`（自动勾选任务）
+4. **完成任务**：`/sg-task complete`
+5. **添加/删除仓库**：`/sg-task add-repo`、`/sg-task remove-repo`
+
+### 提交信息风格
+
+**emoji 风格**（默认）：
+```bash
+✨ docs: 添加产品需求文档
+
+- 新增 product.md
+- 包含用户故事和验收标准
+
+📦 任务: 2026-02-10_对接支付宝转账产品
+```
+
+**simple 风格**：
+```bash
+docs: 添加产品需求文档
+```
+
+**detail 风格**：
+```bash
+docs: 添加产品需求文档
+
+文件变更:
+- 新增: product.md
+- 任务ID: 2026-02-10_对接支付宝转账产品
+- 变更时间: 2026-02-10 14:30:00
+```
+
+### 工作流程
+
+```python
+def auto_git_sync():
+    """自动 Git 同步工作流程"""
+
+    # 1. 检查是否启用自动同步
+    if not config.auto_commit:
+        return
+
+    # 2. 检查 .tasks 是否是 Git 仓库
+    if not is_git_repository('.tasks'):
+        return
+
+    # 3. 检测文件变更
+    changed_files = detect_changes('.tasks')
+    if not changed_files:
+        return
+
+    # 4. 生成提交信息
+    commit_msg = generate_commit_message(
+        style=config.commit_message_style,
+        changed_files=changed_files,
+        task_info=get_current_task()
+    )
+
+    # 5. 执行 git add
+    run_git_command('git add .')
+
+    # 6. 执行 git commit
+    run_git_command(f'git commit -m "{commit_msg}"')
+
+    # 7. 如果启用自动推送，执行 git push
+    if config.auto_push:
+        run_git_command('git push')
+
+    # 8. 友好提示
+    show_success_message(changed_files, commit_msg)
+```
+
+### 示例交互
+
+**场景 1：创建新文档**
+```bash
+用户：/sg-task doc api
+
+Claude：正在生成接口文档...
+✅ 已创建：api.md
+
+🚀 自动同步到 Git...
+✅ 提交：✨ docs: 添加接口文档
+✅ 推送：origin/master → master
+```
+
+**场景 2：更新开发计划**
+```bash
+用户：登录接口开发完成了
+
+Claude：✅ 已自动更新 development.md
+      - [x] 登录接口
+
+🚀 自动同步到 Git...
+✅ 提交：✅ docs: 更新开发进度 - 完成登录接口
+✅ 推送：origin/master → master
+```
+
+**场景 3：完成任务**
+```bash
+用户：/sg-task complete
+
+Claude：✅ 任务完成！
+
+🚀 自动同步到 Git...
+✅ 提交：🎉 complete: 完成任务 - 对接支付宝转账产品
+✅ 推送：origin/master → master
+```
+
+### 错误处理
+
+| 错误场景 | 处理方式 |
+|---------|---------|
+| 不是 Git 仓库 | 静默跳过，不影响正常功能 |
+| 未配置远程仓库 | 仅提交本地，不推送 |
+| 推送失败 | 提示错误信息，但不中断任务 |
+| 网络不可达 | 仅提交本地，稍后可手动推送 |
+
+### 手动控制
+
+**临时禁用自动同步**：
+```bash
+用户：更新 development.md（不要提交）
+
+Claude：✅ 已更新 development.md
+      （已跳过 Git 同步）
+```
+
+**强制推送所有更改**：
+```bash
+用户：/sg-task sync
+
+Claude：🚀 正在同步到 Git...
+✅ 已提交 3 个文件更改
+✅ 已推送到远程仓库
+```
+
+### 最佳实践
+
+1. **首次设置**：初始化 `.tasks` 为 Git 仓库后，在配置中启用 `auto_commit`
+2. **远程仓库**：建议使用 GitHub/GitLab 等托管服务，实现云端备份
+3. **提交频率**：每次文档变更都会提交，形成完整的变更历史
+4. **分支策略**：建议使用 `main/master` 分支，简单直接
+5. **冲突处理**：如有冲突，手动解决后再继续操作
+
+---
+
+## 图标规范
+
+- 🔄 进行中
+- ✅ 已完成
+- ⏸️ 暂停
+- 🔧 后端
+- 💻 PC端前端
+- 📱 移动端前端
+- 📦 小程序
+- 🏗️ 原生应用
+- 📦 仓库
+- 📄 文档
+
+---
+
 ## 核心设计原则
 
 1. **极简起步** - 创建任务只生成 meta.md，其他文档按需创建
@@ -1132,3 +1333,4 @@ Claude：⚠️ 配置中的仓库不存在：
 9. **智能推断** - 通过对话自动更新进度，减少手动操作
 10. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
 11. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新
+12. **自动备份** - 任务文档自动提交到 Git，形成完整的变更历史记录
