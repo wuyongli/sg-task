@@ -33,7 +33,7 @@ repositories:
     type: backend
     path: /Users/wuyongli/Documents/sg-project/pf-backend
 
-  - name: 批发前端              # 手动输入的名称
+  - name: 批发PC端              # 手动输入的名称
     type: pc
     path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
 
@@ -49,6 +49,11 @@ repositories:
     type: mini-program
     path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
 ```
+
+**展示格式：** 在选择和显示仓库时，使用 `手动名称 (目录名)` 的格式，例如：
+- `批发后端`
+- `批发PC端`
+- `批发移动端`
 
 ### 仓库类型
 
@@ -208,11 +213,11 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 ✅ 配置完成！已保存到 ~/.claude/sg-task/config.yaml
 
 已配置的仓库（按名称排序）：
-- 财务SDK（other）
-- 批发PC端（pc）
-- 批发后端（backend）
-- 批发移动端（mobile）
-- 商户后端（backend）
+- 财务SDK（senguo-finance-sdk，other）
+- 批发PC端（senguo-pf-manage-frontend，pc）
+- 批发后端（pf-backend，backend）
+- 批发移动端（senguo-pf-easy-mobile，mobile）
+- 商户后端（senguo-merchantcenter-backend，backend）
 ```
 
 ---
@@ -245,17 +250,17 @@ Claude：正在创建任务...
 
 请选择涉及仓库：
 
-- [ ] 财务SDK（other）
-- [ ] 批发PC端（pc）
-- [ ] 批发后端（backend）
-- [ ] 批发移动端（mobile）
-- [ ] 商户后端（backend）
+- [ ] 财务SDK（senguo-finance-sdk，other）
+- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 批发后端（pf-backend，backend）
+- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 商户后端（senguo-merchantcenter-backend，backend）
 
 [用户选择：批发后端 + 批发移动端]
 
 正在检测各仓库分支...
-✅ 批发后端: feature/login-opt
-✅ 批发移动端: feature/login
+✅ 批发后端 (pf-backend): feature/login-opt
+✅ 批发移动端 (senguo-pf-easy-mobile): feature/login
 
 ✅ 已创建任务：2024-01-28_优化登录
    - meta.md（任务元数据）
@@ -306,18 +311,18 @@ def detect_branches(selected_repos):
 Claude：当前任务：2024-01-28_优化登录
 
 当前涉及的仓库：
-- 批发后端（backend）
-- 批发移动端（mobile）
+- 批发后端 (pf-backend，backend)
+- 批发移动端 (senguo-pf-easy-mobile，mobile)
 
 请选择要添加的仓库：
 
-- [ ] 批发PC端（pc）
-- [ ] 商户后端（backend）
+- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 商户后端（senguo-merchantcenter-backend，backend）
 
 用户：添加 批发PC端
 
 正在检测分支...
-✅ 批发PC端: feature/login-page
+✅ 批发PC端 (senguo-pf-manage-frontend): feature/login-page
 
 ✅ 已添加到任务
 
@@ -348,14 +353,14 @@ Claude：当前任务：2024-01-28_优化登录
 用户：/sg-task remove-repo
 
 Claude：当前任务涉及的仓库：
-- 批发后端（backend）
-- 批发移动端（mobile）
-- 批发PC端（pc）
+- 批发后端 (pf-backend，backend)
+- 批发移动端 (senguo-pf-easy-mobile，mobile)
+- 批发PC端 (senguo-pf-manage-frontend，pc)
 
 请选择要移除的仓库：
 > 批发PC端
 
-⚠️ 确认移除 批发PC端？(y/n)
+⚠️ 确认移除 批发PC端 (senguo-pf-manage-frontend)？(y/n)
 > y
 
 ✅ 已从任务中移除
@@ -389,11 +394,11 @@ Claude：📋 当前任务：优化登录功能
 - 创建时间：2024-01-28
 
 📦 涉及仓库：
-🔧 批发后端（backend）
+🔧 批发后端 (pf-backend，backend)
    分支：feature/login-optimization
    路径：../pf-backend
 
-📱 批发移动端（mobile）
+📱 批发移动端 (senguo-pf-easy-mobile，mobile)
    分支：feature/login-optimization
    路径：../senguo-pf-easy-mobile
 
@@ -438,15 +443,15 @@ Claude：📋 任务列表
 
 🔄 2024-01-28_优化登录
    分支：feature/login-optimization
-   仓库：批发后端, 批发移动端
+   仓库：批发后端 (pf-backend), 批发移动端 (senguo-pf-easy-mobile)
 
 ✅ 2024-01-27_添加购物车
    分支：feature/add-cart
-   仓库：批发后端, 批发移动端
+   仓库：批发后端 (pf-backend), 批发移动端 (senguo-pf-easy-mobile)
 
 ⏸️ 2024-01-26_修复订单bug
    分支：fix/order-bug
-   仓库：批发后端
+   仓库：批发后端 (pf-backend)
 ```
 
 ---
@@ -587,8 +592,8 @@ Claude：✅ 任务完成！
 - [查看接口文档](.tasks/2024-01-28_优化登录/api.md)
 
 🔗 待提交分支：
-- 批发后端: feature/login-optimization
-- 批发移动端: feature/login-optimization
+- 批发后端 (pf-backend): feature/login-optimization
+- 批发移动端 (senguo-pf-easy-mobile): feature/login-optimization
 ```
 
 ---
@@ -847,16 +852,16 @@ cd ../senguo-pf-manage-frontend && git checkout -b feature/login-page
 
 # 3. 选择涉及仓库
 Claude：请选择涉及仓库：
-- [ ] 批发后端（backend）
-- [ ] 批发移动端（mobile）
-- [ ] 批发PC端（pc）
+- [ ] 批发后端（pf-backend，backend）
+- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
 
 用户：选择后端和移动端
 
 # 4. skill 自动检测各仓库分支并创建任务
 Claude：正在检测各仓库分支...
-✅ 批发后端: feature/login-v2
-✅ 批发移动端: feature/login
+✅ 批发后端 (pf-backend): feature/login-v2
+✅ 批发移动端 (senguo-pf-easy-mobile): feature/login
 
 ✅ 已创建任务：2024-01-28_优化登录
    meta.md 已记录：
@@ -931,7 +936,7 @@ Claude：📊 任务进度：优化登录功能
 用户：调整移动端登录页面样式
 
 Claude：📱 正在处理移动端样式调整...
-定位到仓库：批发移动端（mobile）
+定位到仓库：批发移动端 (senguo-pf-easy-mobile，mobile)
 ```
 
 ### 智能文档建议

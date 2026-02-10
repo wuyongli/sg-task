@@ -129,9 +129,9 @@ cd ../pc && git checkout -b feature/login-page
 用户：/sg-task create 优化登录
 
 Claude：正在检测各仓库分支...
-✅ 批发后端: feature/login-v2
-✅ 批发移动端: feature/login
-✅ 批发PC端: feature/login-page
+✅ 批发后端 (pf-backend): feature/login-v2
+✅ 批发移动端 (senguo-pf-easy-mobile): feature/login
+✅ 批发PC端 (senguo-pf-manage-frontend): feature/login-page
 
 ✅ 任务已创建，meta.md 记录了各仓库对应的分支
 ```
@@ -180,6 +180,11 @@ repositories:
     path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
 ```
 
+**展示格式：** 在选择和显示仓库时，使用 `手动名称 (目录名, 类型)` 的格式，例如：
+- `批发后端 (pf-backend, backend)`
+- `批发移动端 (senguo-pf-easy-mobile, mobile)`
+- `批发PC端 (senguo-pf-manage-frontend, pc)`
+
 ### 首次使用流程
 
 ```bash
@@ -219,24 +224,24 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 ✅ 配置完成！已保存到 ~/.claude/sg-task/config.yaml
 
 已配置的仓库（按名称排序）：
-- 批发PC端（pc）
-- 批发后端（backend）
-- 批发移动端（mobile）
+- 批发PC端（senguo-pf-manage-frontend，pc）
+- 批发后端（pf-backend，backend）
+- 批发移动端（senguo-pf-easy-mobile，mobile）
 ```
 
 ### 按名称排序选择仓库
 
-创建任务时，仓库按名称排序显示：
+创建任务时，仓库按名称排序显示，格式为：`手动名称 (目录名, 类型)`
 
 ```bash
 用户：/sg-task create 优化登录
 
 请选择涉及仓库：
 
-- [ ] 批发PC端（pc）
-- [ ] 批发后端（backend）
-- [ ] 批发移动端（mobile）
-- [ ] 商户后端（backend）
+- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 批发后端（pf-backend，backend）
+- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 商户后端（senguo-merchantcenter-backend，backend）
 ```
 
 ### 中途添加/删除仓库
@@ -249,12 +254,12 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 
 Claude：当前任务：2024-01-28_优化登录
 当前涉及的仓库：
-- 批发后端（backend）
-- 批发移动端（mobile）
+- 批发后端（pf-backend，backend）
+- 批发移动端（senguo-pf-easy-mobile，mobile）
 
 请选择要添加的仓库：
-- [ ] 批发PC端（pc）
-- [ ] 商户后端（backend）
+- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 商户后端（senguo-merchantcenter-backend，backend）
 
 用户：添加 批发PC端
 ✅ 已添加
