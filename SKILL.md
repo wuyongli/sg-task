@@ -12,7 +12,7 @@ description: 森果任务管理工具。帮助管理多仓库开发任务，每�
 - **任务即工作空间** - 每个任务文件夹包含该任务的所有文档
 - **分支自动关联** - 通过当前 Git 分支自动定位任务
 - **按需创建文档** - 需要什么文档就创建什么，不被不需要的文档干扰
-- **项目分组管理** - 按项目分组仓库，支持多个前端/后端/小程序等
+- **手动仓库命名** - 用户自定义仓库名称（如"批发后端"、"商户前端"），灵活直观
 - **动态仓库配置** - 首次使用时自动扫描并配置，支持中途添加/删除仓库
 - **仓库类型标注** - 明确标注前端/后端、PC/移动端/小程序/原生，快速定位
 
@@ -28,30 +28,26 @@ sg-task 使用配置文件来管理项目仓库信息：
 
 ```yaml
 # ~/.claude/sg-task/config.yaml
-projects:
-  森果批发系统:
-    repositories:
-      - name: pf-backend
-        type: backend
-        path: /Users/wuyongli/Documents/sg-project/pf-backend
+repositories:
+  - name: 批发后端              # 手动输入的名称
+    type: backend
+    path: /Users/wuyongli/Documents/sg-project/pf-backend
 
-      - name: senguo-pf-easy-mobile
-        type: mobile
-        path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
+  - name: 批发前端              # 手动输入的名称
+    type: pc
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
 
-      - name: senguo-pf-manage-frontend
-        type: pc
-        path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
+  - name: 批发移动端            # 手动输入的名称
+    type: mobile
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
 
-  商户中心:
-    repositories:
-      - name: senguo-merchantcenter-backend
-        type: backend
-        path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
+  - name: 商户后端              # 手动输入的名称
+    type: backend
+    path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
 
-      - name: merchant-mini-program
-        type: mini-program
-        path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
+  - name: 商户小程序            # 手动输入的名称
+    type: mini-program
+    path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
 ```
 
 ### 仓库类型
@@ -120,16 +116,25 @@ repositories:
 ---
 ```
 
-### 仓库类型标注
+### 仓库示例
 
-每个仓库只需指定 `type` 字段即可：
+```yaml
+repositories:
+  - name: 批发后端              # 手动输入的名称
+    type: backend
+    branch: feature/login-opt    # 自动检测的分支名
+    path: /Users/wuyongli/Documents/sg-project/pf-backend
 
-- `type: backend` - 后端
-- `type: pc` - PC端前端
-- `type: mobile` - 移动端App
-- `type: mini-program` - 小程序
-- `type: native` - 原生应用
-- `type: other` - 其他类型
+  - name: 批发移动端            # 手动输入的名称
+    type: mobile
+    branch: feature/login        # 分支名可以不同
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
+
+  - name: 批发PC端              # 手动输入的名称
+    type: pc
+    branch: feature/login-page-v2  # 分支名可以不同
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
+```
 
 ## 可用命令
 
@@ -140,7 +145,7 @@ repositories:
 **流程：**
 
 1. 扫描当前目录下所有 Git 仓库
-2. 询问每个仓库的项目名称和类型
+2. 询问每个仓库的名称和类型
 3. 生成配置文件：`~/.claude/sg-task/config.yaml`
 
 **示例：**
@@ -157,11 +162,11 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 4. ./senguo-merchantcenter-backend
 5. ./senguo-finance-sdk
 
-现在需要为每个仓库配置项目信息和类型：
+现在需要为每个仓库配置名称和类型：
 
 **1. ./pf-backend**
-属于哪个项目？（输入项目名称）
-> 森果批发系统
+这个仓库叫什么名字？（输入名称，如"批发后端"）
+> 批发后端
 
 是什么类型？
 - [ ] backend
@@ -173,38 +178,41 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 > backend
 
 **2. ./senguo-pf-easy-mobile**
-属于哪个项目？
-> 森果批发系统
+这个仓库叫什么名字？
+> 批发移动端
 
 是什么类型？
 > mobile
 
 **3. ./senguo-pf-manage-frontend**
-属于哪个项目？
-> 森果批发系统
+这个仓库叫什么名字？
+> 批发PC端
 
 是什么类型？
 > pc
 
 **4. ./senguo-merchantcenter-backend**
-属于哪个项目？
-> 商户中心
+这个仓库叫什么名字？
+> 商户后端
 
 是什么类型？
 > backend
 
 **5. ./senguo-finance-sdk**
-属于哪个项目？
-> 森果批发系统
+这个仓库叫什么名字？
+> 财务SDK
 
 是什么类型？
 > other
 
 ✅ 配置完成！已保存到 ~/.claude/sg-task/config.yaml
 
-项目分组：
-- 森果批发系统（4个仓库）
-- 商户中心（1个仓库）
+已配置的仓库（按名称排序）：
+- 财务SDK（other）
+- 批发PC端（pc）
+- 批发后端（backend）
+- 批发移动端（mobile）
+- 商户后端（backend）
 ```
 
 ---
@@ -221,7 +229,7 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 2. 检查是否有新仓库需要配置
 3. 检查配置中的仓库是否仍然存在
 4. 从配置文件读取可用仓库列表
-5. 按项目分组显示仓库供选择
+5. 按仓库名称排序显示仓库供选择
 6. **自动检测每个仓库的当前 Git 分支**
 7. 收集任务信息（名称、描述等）
 8. 创建任务目录：`.tasks/YYYY-MM-DD_任务名称/`
@@ -237,22 +245,17 @@ Claude：正在创建任务...
 
 请选择涉及仓库：
 
-【森果批发系统】
-- [ ] pf-backend（backend）
-- [ ] senguo-pf-easy-mobile（mobile）
-- [ ] senguo-pf-manage-frontend（pc）
+- [ ] 财务SDK（other）
+- [ ] 批发PC端（pc）
+- [ ] 批发后端（backend）
+- [ ] 批发移动端（mobile）
+- [ ] 商户后端（backend）
 
-【商户中心】
-- [ ] senguo-merchantcenter-backend（backend）
-
-【其他】
-- [ ] senguo-finance-sdk（other）
-
-[用户选择：pf-backend + senguo-pf-easy-mobile]
+[用户选择：批发后端 + 批发移动端]
 
 正在检测各仓库分支...
-✅ pf-backend: feature/login-opt
-✅ senguo-pf-easy-mobile: feature/login
+✅ 批发后端: feature/login-opt
+✅ 批发移动端: feature/login
 
 ✅ 已创建任务：2024-01-28_优化登录
    - meta.md（任务元数据）
@@ -292,7 +295,7 @@ def detect_branches(selected_repos):
 1. 通过当前分支定位任务
 2. 显示当前涉及的仓库
 3. 从配置文件读取可用仓库（排除已添加的）
-4. 按项目分组显示可选仓库
+4. 按仓库名称排序显示可选仓库
 5. **自动检测新仓库的当前 Git 分支**
 6. 更新 `meta.md`
 
@@ -303,21 +306,18 @@ def detect_branches(selected_repos):
 Claude：当前任务：2024-01-28_优化登录
 
 当前涉及的仓库：
-- pf-backend（backend）
-- senguo-pf-easy-mobile（mobile）
+- 批发后端（backend）
+- 批发移动端（mobile）
 
 请选择要添加的仓库：
 
-【森果批发系统】
-- [ ] senguo-pf-manage-frontend（pc）
+- [ ] 批发PC端（pc）
+- [ ] 商户后端（backend）
 
-【商户中心】
-- [ ] senguo-merchantcenter-backend（backend）
-
-用户：添加 senguo-pf-manage-frontend
+用户：添加 批发PC端
 
 正在检测分支...
-✅ senguo-pf-manage-frontend: feature/login-page
+✅ 批发PC端: feature/login-page
 
 ✅ 已添加到任务
 
@@ -348,14 +348,14 @@ Claude：当前任务：2024-01-28_优化登录
 用户：/sg-task remove-repo
 
 Claude：当前任务涉及的仓库：
-- pf-backend（backend）
-- senguo-pf-easy-mobile（mobile）
-- senguo-pf-manage-frontend（pc）
+- 批发后端（backend）
+- 批发移动端（mobile）
+- 批发PC端（pc）
 
 请选择要移除的仓库：
-> senguo-pf-manage-frontend
+> 批发PC端
 
-⚠️ 确认移除 senguo-pf-manage-frontend？(y/n)
+⚠️ 确认移除 批发PC端？(y/n)
 > y
 
 ✅ 已从任务中移除
@@ -389,11 +389,11 @@ Claude：📋 当前任务：优化登录功能
 - 创建时间：2024-01-28
 
 📦 涉及仓库：
-🔧 pf-backend（后端）
+🔧 批发后端（backend）
    分支：feature/login-optimization
    路径：../pf-backend
 
-📱 senguo-pf-easy-mobile（移动端前端）
+📱 批发移动端（mobile）
    分支：feature/login-optimization
    路径：../senguo-pf-easy-mobile
 
@@ -438,15 +438,15 @@ Claude：📋 任务列表
 
 🔄 2024-01-28_优化登录
    分支：feature/login-optimization
-   仓库：pf-backend, senguo-pf-easy-mobile
+   仓库：批发后端, 批发移动端
 
 ✅ 2024-01-27_添加购物车
    分支：feature/add-cart
-   仓库：pf-backend, senguo-pf-easy-mobile
+   仓库：批发后端, 批发移动端
 
 ⏸️ 2024-01-26_修复订单bug
    分支：fix/order-bug
-   仓库：pf-backend
+   仓库：批发后端
 ```
 
 ---
@@ -587,8 +587,8 @@ Claude：✅ 任务完成！
 - [查看接口文档](.tasks/2024-01-28_优化登录/api.md)
 
 🔗 待提交分支：
-- pf-backend: feature/login-optimization
-- senguo-pf-easy-mobile: feature/login-optimization
+- 批发后端: feature/login-optimization
+- 批发移动端: feature/login-optimization
 ```
 
 ---
@@ -807,15 +807,15 @@ Claude：✅ 任务完成！
 ## 📦 涉及仓库
 
 ### 🔧 后端
-- **pf-backend** (`<分支名>`)
+- **批发后端** (`<分支名>`)
   - 路径：`../pf-backend`
 
 ### 📱 移动端
-- **senguo-pf-easy-mobile** (`<分支名>`)
+- **批发移动端** (`<分支名>`)
   - 路径：`../senguo-pf-easy-mobile`
 
 ### 💻 PC端
-- **senguo-pf-manage-frontend** (`<分支名>`)
+- **批发PC端** (`<分支名>`)
   - 路径：`../senguo-pf-manage-frontend`
 
 ## 📄 文档列表
@@ -847,21 +847,21 @@ cd ../senguo-pf-manage-frontend && git checkout -b feature/login-page
 
 # 3. 选择涉及仓库
 Claude：请选择涉及仓库：
-- [ ] pf-backend（后端）
-- [ ] senguo-pf-easy-mobile（移动端前端）
-- [ ] senguo-pf-manage-frontend（PC端前端）
+- [ ] 批发后端（backend）
+- [ ] 批发移动端（mobile）
+- [ ] 批发PC端（pc）
 
 用户：选择后端和移动端
 
 # 4. skill 自动检测各仓库分支并创建任务
 Claude：正在检测各仓库分支...
-✅ pf-backend: feature/login-v2
-✅ senguo-pf-easy-mobile: feature/login
+✅ 批发后端: feature/login-v2
+✅ 批发移动端: feature/login
 
 ✅ 已创建任务：2024-01-28_优化登录
    meta.md 已记录：
-   - pf-backend → feature/login-v2
-   - senguo-pf-easy-mobile → feature/login
+   - 批发后端 → feature/login-v2
+   - 批发移动端 → feature/login
 ```
 
 ### 2. 按需创建文档
@@ -931,7 +931,7 @@ Claude：📊 任务进度：优化登录功能
 用户：调整移动端登录页面样式
 
 Claude：📱 正在处理移动端样式调整...
-定位到仓库：senguo-pf-easy-mobile（移动端前端）
+定位到仓库：批发移动端（mobile）
 ```
 
 ### 智能文档建议
@@ -1087,8 +1087,8 @@ def smart_document_sync():
 
 Claude：⚠️ 检测到新仓库：./new-project-backend
 
-属于哪个项目？
-> 新项目
+这个仓库叫什么名字？（输入名称）
+> 新项目后端
 
 是什么类型？
 - [ ] backend
@@ -1145,10 +1145,11 @@ Claude：⚠️ 配置中的仓库不存在：
 1. **极简起步** - 创建任务只生成 meta.md 和 README.md
 2. **按需扩展** - 需要什么文档就创建什么
 3. **分支驱动** - 通过 Git 分支自动关联任务，各仓库分支名可不同
-4. **项目分组** - 按项目分组管理仓库，支持多个前端/后端/小程序
+4. **手动命名** - 用户手动输入仓库名称，灵活自定义（如"批发后端"、"商户前端"）
 5. **动态配置** - 首次扫描自动配置，支持中途添加/删除仓库
 6. **类型清晰** - 明确标注仓库类型（backend/pc/mobile/mini-program/native/other）
-7. **上下文保持** - 新开窗口也能自动识别任务
-8. **智能推断** - 通过对话自动更新进度，减少手动操作
-9. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
-10. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新
+7. **名称排序** - 所有仓库列表按名称排序展示
+8. **上下文保持** - 新开窗口也能自动识别任务
+9. **智能推断** - 通过对话自动更新进度，减少手动操作
+10. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
+11. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新

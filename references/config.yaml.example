@@ -3,40 +3,36 @@
 # 实际配置文件位置：~/.claude/sg-task/config.yaml
 # 本文件仅供参考，不需要修改
 
-projects:
-  森果批发系统:
-    repositories:
-      # 后端仓库
-      - name: pf-backend
-        type: backend
-        path: /Users/wuyongli/Documents/sg-project/pf-backend
+repositories:
+  # 后端仓库
+  - name: 批发后端              # 手动输入的名称
+    type: backend
+    path: /Users/wuyongli/Documents/sg-project/pf-backend
 
-      # 移动端App
-      - name: senguo-pf-easy-mobile
-        type: mobile
-        path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
+  # 移动端App
+  - name: 批发移动端            # 手动输入的名称
+    type: mobile
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
 
-      # PC端前端
-      - name: senguo-pf-manage-frontend
-        type: pc
-        path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
+  # PC端前端
+  - name: 批发PC端              # 手动输入的名称
+    type: pc
+    path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
 
-      # SDK或其他工具库
-      - name: senguo-finance-sdk
-        type: other
-        path: /Users/wuyongli/Documents/sg-project/senguo-finance-sdk
+  # SDK或其他工具库
+  - name: 财务SDK               # 手动输入的名称
+    type: other
+    path: /Users/wuyongli/Documents/sg-project/senguo-finance-sdk
 
-  商户中心:
-    repositories:
-      # 后端仓库
-      - name: senguo-merchantcenter-backend
-        type: backend
-        path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
+  # 商户中心后端
+  - name: 商户后端              # 手动输入的名称
+    type: backend
+    path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
 
-      # 小程序
-      - name: merchant-mini-program
-        type: mini-program
-        path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
+  # 商户小程序
+  - name: 商户小程序            # 手动输入的名称
+    type: mini-program
+    path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
 
 # 仓库类型说明：
 # backend       - 后端
