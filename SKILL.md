@@ -1252,32 +1252,65 @@ Claude：⚠️ 配置中的仓库不存在：
 
 ### 配置方式
 
-**在配置文件中启用自动同步：**
+**在配置文件中启用智能自动同步：**
 
 ```yaml
 # ~/.claude/sg-task/config.yaml
-auto_commit: true           # 是否自动提交到 Git（默认: true）
+repositories:
+  - name: 批发后端
+    type: backend
+    path: /Users/wuyongli/Documents/sg-project/pf-backend
+  # ... 其他仓库
+
+# Git 智能自动同步配置
+auto_commit: smart          # 提交模式：true/false/smart（默认: smart）
 auto_push: true             # 是否自动推送到远程（默认: true）
 commit_message_style: emoji # 提交信息风格：emoji / simple / detail
+
+# 智能提交策略（当 auto_commit: smart 时生效）
+smart_commit:
+  # 防抖：短时间内的多次修改合并为一次提交
+  debounce_minutes: 5      # 默认: 5 分钟
+
+  # 立即提交：重要操作不等待，立即提交
+  immediate_on:
+    - task_completed        # 完成任务时
+    - repository_changed    # 添加/删除仓库时
+    - task_created          # 创建新任务时
+
+  # 兜底：长时间未修改自动提交，确保数据安全
+  max_idle_minutes: 30      # 默认: 30 分钟
 ```
 
 ### 配置选项说明
 
 | 选项 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `auto_commit` | boolean | true | 是否自动提交文档变更 |
+| `auto_commit` | boolean/string | smart | 提交模式：true（每次修改）/false（手动）/smart（智能） |
 | `auto_push` | boolean | true | 是否自动推送到远程仓库 |
 | `commit_message_style` | string | emoji | 提交信息风格：emoji / simple / detail |
+| `smart_commit.debounce_minutes` | number | 5 | 防抖时间（分钟），短时间内的修改合并为一次提交 |
+| `smart_commit.immediate_on` | array | [] | 立即提交的操作列表 |
+| `smart_commit.max_idle_minutes` | number | 30 | 兜底时间（分钟），超时自动提交 |
 
 ### 自动触发场景
 
-以下操作会自动触发 Git 同步：
+根据不同的操作类型，智能组合提交有不同的处理方式：
 
+**立即提交的操作（不等待）：**
+1. **完成任务**：`/sg-task complete` → `operation_type='task_completed'`
+2. **创建任务**：`/sg-task create` → `operation_type='task_created'`
+3. **添加仓库**：`/sg-task add-repo` → `operation_type='repository_changed'`
+4. **删除仓库**：`/sg-task remove-repo` → `operation_type='repository_changed'`
+
+**防抖合并提交（短时间内的多次修改合并）：**
 1. **创建文档**：`/sg-task doc product`、`/sg-task doc api` 等
 2. **更新文档**：通过 Edit/Write 工具修改任务文档
 3. **更新进度**：`/sg-task progress`（自动勾选任务）
-4. **完成任务**：`/sg-task complete`
-5. **添加/删除仓库**：`/sg-task add-repo`、`/sg-task remove-repo`
+4. **智能推断更新**：对话中自动更新 development.md
+
+**兜底自动提交（超时保护）：**
+- 距离上次提交超过 `max_idle_minutes`（默认 30 分钟）时自动提交
 
 ### 提交信息风格
 
@@ -1306,81 +1339,262 @@ docs: 添加产品需求文档
 - 变更时间: 2026-02-10 14:30:00
 ```
 
-### 工作流程
+### 工作流程（智能组合提交）
 
 ```python
-def auto_git_sync():
-    """自动 Git 同步工作流程"""
+class SmartCommitManager:
+    """智能提交管理器"""
 
-    # 1. 检查是否启用自动同步
-    if not config.auto_commit:
-        return
+    def __init__(self, config):
+        self.config = config
+        self.last_change_time = None
+        self.pending_timer = None
+        self.last_commit_time = time.time()
 
-    # 2. 检查 .tasks 是否是 Git 仓库
-    if not is_git_repository('.tasks'):
-        return
+    def on_document_change(self, operation_type='normal'):
+        """
+        文档变更时调用
 
-    # 3. 检测文件变更
-    changed_files = detect_changes('.tasks')
-    if not changed_files:
-        return
+        Args:
+            operation_type: 操作类型
+                - 'normal': 普通编辑
+                - 'task_completed': 完成任务
+                - 'repository_changed': 仓库变更
+                - 'task_created': 创建任务
+        """
+        # 1. 检查是否启用自动提交
+        if not self.config.auto_commit:
+            return
 
-    # 4. 生成提交信息
-    commit_msg = generate_commit_message(
-        style=config.commit_message_style,
-        changed_files=changed_files,
-        task_info=get_current_task()
-    )
+        # 2. 检查 .tasks 是否是 Git 仓库
+        if not is_git_repository('.tasks'):
+            return
 
-    # 5. 执行 git add
-    run_git_command('git add .')
+        # 3. 检测文件变更
+        changed_files = detect_changes('.tasks')
+        if not changed_files:
+            return
 
-    # 6. 执行 git commit
-    run_git_command(f'git commit -m "{commit_msg}"')
+        current_time = time.time()
 
-    # 7. 如果启用自动推送，执行 git push
-    if config.auto_push:
-        run_git_command('git push')
+        # 4. 判断是否需要立即提交
+        if self._should_commit_immediately(operation_type):
+            self._commit_now(changed_files, operation_type)
+            return
 
-    # 8. 友好提示
-    show_success_message(changed_files, commit_msg)
+        # 5. 检查是否需要兜底提交（超过 max_idle 时间）
+        if self._should_commit_by_idle():
+            self._commit_now(changed_files, 'idle_timeout')
+            return
+
+        # 6. 防抖处理：短时间内的多次修改合并
+        self.last_change_time = current_time
+
+        # 取消之前的定时器
+        if self.pending_timer:
+            self.pending_timer.cancel()
+
+        # 设置新的定时器
+        debounce_seconds = self.config.smart_commit.get('debounce_minutes', 5) * 60
+        self.pending_timer = Timer(debounce_seconds, self._commit_now, [changed_files, 'debounce'])
+        self.pending_timer.start()
+
+    def _should_commit_immediately(self, operation_type):
+        """判断是否应该立即提交"""
+        if self.config.auto_commit != 'smart':
+            # 如果是 true 模式，每次都立即提交
+            return self.config.auto_commit == True
+
+        immediate_triggers = self.config.smart_commit.get('immediate_on', [])
+
+        return operation_type in immediate_triggers
+
+    def _should_commit_by_idle(self):
+        """判断是否应该兜底提交（超时）"""
+        if self.config.auto_commit != 'smart':
+            return False
+
+        current_time = time.time()
+        max_idle_seconds = self.config.smart_commit.get('max_idle_minutes', 30) * 60
+        idle_time = current_time - self.last_commit_time
+
+        return idle_time >= max_idle_seconds
+
+    def _commit_now(self, changed_files, reason):
+        """立即执行提交"""
+        # 取消待处理的定时器
+        if self.pending_timer:
+            self.pending_timer.cancel()
+            self.pending_timer = None
+
+        # 生成提交信息
+        commit_msg = self._generate_commit_message(changed_files, reason)
+
+        # 执行 git 操作
+        try:
+            run_git_command('git add .')
+            run_git_command(f'git commit -m "{commit_msg}"')
+
+            # 更新最后提交时间
+            self.last_commit_time = time.time()
+
+            # 推送到远程
+            if self.config.auto_push:
+                run_git_command('git push')
+
+            # 友好提示
+            self._show_success_message(changed_files, commit_msg, reason)
+
+        except Exception as e:
+            print(f"❌ Git 同步失败: {e}")
+
+    def _generate_commit_message(self, changed_files, reason):
+        """生成提交信息"""
+        style = self.config.commit_message_style or 'emoji'
+
+        # 根据原因生成不同的前缀
+        reason_prefixes = {
+            'task_completed': '🎉',
+            'repository_changed': '🔧',
+            'task_created': '✨',
+            'idle_timeout': '💾',
+            'debounce': '📝'
+        }
+
+        prefix = reason_prefixes.get(reason, '📝')
+
+        if style == 'emoji':
+            msg = f"{prefix} docs: {self._get_change_summary(changed_files)}\n\n"
+            msg += f"- 原因: {reason}\n"
+            msg += f"- 文件: {', '.join(changed_files)}"
+        elif style == 'simple':
+            msg = f"docs: {self._get_change_summary(changed_files)}"
+        else:  # detail
+            msg = f"docs: {self._get_change_summary(changed_files)}\n\n"
+            msg += f"变更原因: {reason}\n"
+            msg += f"变更文件: {', '.join(changed_files)}\n"
+            msg += f"变更时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+        return msg
+
+    def _get_change_summary(self, changed_files):
+        """获取变更摘要"""
+        summaries = []
+        for file in changed_files:
+            if 'product.md' in file:
+                summaries.append('更新产品文档')
+            elif 'development.md' in file:
+                summaries.append('更新开发计划')
+            elif 'api.md' in file:
+                summaries.append('更新接口文档')
+            elif 'test.md' in file:
+                summaries.append('更新测试用例')
+            elif 'meta.md' in file:
+                summaries.append('更新任务元数据')
+            else:
+                summaries.append('更新文档')
+
+        # 去重
+        return '、'.join(list(set(summaries)))
+
+    def _show_success_message(self, changed_files, commit_msg, reason):
+        """显示成功消息"""
+        reason_messages = {
+            'task_completed': '✅ 任务完成，已立即提交',
+            'repository_changed': '🔧 仓库变更，已立即提交',
+            'task_created': '✨ 新任务创建，已立即提交',
+            'idle_timeout': '💾 检测到长时间未提交，已自动备份',
+            'debounce': '📝 文档变更已提交'
+        }
+
+        msg = reason_messages.get(reason, '✅ 已提交')
+        print(f"\n{msg}")
+        print(f"📄 变更文件: {len(changed_files)} 个")
+        print(f"📝 提交信息: {commit_msg.split(chr(10))[0]}")
+
+        if self.config.auto_push:
+            print("🚀 已推送到远程仓库")
+
+
+# 全局实例
+smart_commit_manager = None
+
+def auto_git_sync(operation_type='normal'):
+    """自动 Git 同步入口函数"""
+
+    global smart_commit_manager
+
+    # 初始化管理器
+    if not smart_commit_manager:
+        smart_commit_manager = SmartCommitManager(config)
+
+    # 处理文档变更
+    smart_commit_manager.on_document_change(operation_type)
 ```
 
-### 示例交互
+### 示例交互（智能组合提交）
 
-**场景 1：创建新文档**
+**场景 1：连续编辑文档（防抖合并）**
 ```bash
-用户：/sg-task doc api
+用户：修改 development.md，添加新任务
+14:00
+✅ 已更新 development.md
+💡 检测到文档变更，5 分钟内无新修改后将自动提交...
 
-Claude：正在生成接口文档...
-✅ 已创建：api.md
+用户：继续修改 product.md
+14:02
+✅ 已更新 product.md
+💡 重置计时，5 分钟内无新修改后将自动提交...
 
-🚀 自动同步到 Git...
-✅ 提交：✨ docs: 添加接口文档
-✅ 推送：origin/master → master
+用户：又修改了 api.md
+14:04
+✅ 已更新 api.md
+💡 重置计时，5 分钟内无新修改后将自动提交...
+
+[5 分钟后，14:09 没有新修改]
+📝 文档变更已提交
+📄 变更文件: 3 个
+📝 提交信息: 📝 docs: 更新开发计划、更新产品文档、更新接口文档
+🚀 已推送到远程仓库
 ```
 
-**场景 2：更新开发计划**
-```bash
-用户：登录接口开发完成了
-
-Claude：✅ 已自动更新 development.md
-      - [x] 登录接口
-
-🚀 自动同步到 Git...
-✅ 提交：✅ docs: 更新开发进度 - 完成登录接口
-✅ 推送：origin/master → master
-```
-
-**场景 3：完成任务**
+**场景 2：重要操作立即提交**
 ```bash
 用户：/sg-task complete
 
 Claude：✅ 任务完成！
 
-🚀 自动同步到 Git...
-✅ 提交：🎉 complete: 完成任务 - 对接支付宝转账产品
-✅ 推送：origin/master → master
+✅ 任务完成，已立即提交
+📄 变更文件: 2 个
+📝 提交信息: 🎉 docs: 更新开发计划、更新任务元数据
+🚀 已推送到远程仓库
+```
+
+**场景 3：长时间未提交兜底**
+```bash
+[场景：用户在 13:00 最后一次提交，之后继续编辑文档]
+
+用户：修改 development.md
+14:35
+✅ 已更新 development.md
+
+💾 检测到长时间未提交，已自动备份
+📄 变更文件: 1 个
+📝 提交信息: 💾 docs: 更新开发计划
+🚀 已推送到远程仓库
+```
+
+**场景 4：创建新任务立即提交**
+```bash
+用户：/sg-task create 新功能开发
+
+Claude：正在创建任务...
+✅ 已创建任务：2026-02-10_新功能开发
+
+✨ 新任务创建，已立即提交
+📄 变更文件: 1 个
+📝 提交信息: ✨ docs: 添加任务元数据
+🚀 已推送到远程仓库
 ```
 
 ### 错误处理
@@ -1394,30 +1608,72 @@ Claude：✅ 任务完成！
 
 ### 手动控制
 
-**临时禁用自动同步**：
-```bash
-用户：更新 development.md（不要提交）
+**配置文件切换模式**：
+```yaml
+# ~/.claude/sg-task/config.yaml
 
-Claude：✅ 已更新 development.md
-      （已跳过 Git 同步）
+# 完全手动
+auto_commit: false
+auto_push: false
+
+# 每次修改都立即提交（可能很频繁）
+auto_commit: true
+auto_push: true
+
+# 智能模式（推荐）⭐
+auto_commit: smart
+auto_push: true
 ```
 
-**强制推送所有更改**：
+**手动立即同步（适用于 smart 模式）**：
 ```bash
 用户：/sg-task sync
 
-Claude：🚀 正在同步到 Git...
+Claude：🚀 正在立即同步到 Git...
 ✅ 已提交 3 个文件更改
 ✅ 已推送到远程仓库
 ```
 
+**查看待提交的变更**：
+```bash
+用户：/sg-task status
+
+Claude：📋 当前状态：
+
+📝 待提交的变更：
+- M 2026-02-10_对接支付宝转账产品/development.md
+- M 2026-02-10_对接支付宝转账产品/product.md
+
+💡 下一次自动提交将在 3 分钟后
+    或执行 /sg-task sync 立即提交
+```
+
 ### 最佳实践
 
-1. **首次设置**：初始化 `.tasks` 为 Git 仓库后，在配置中启用 `auto_commit`
+1. **推荐配置**：使用 `auto_commit: smart` 模式
+   - 自动防抖，减少提交次数
+   - 重要操作立即提交，不延迟
+   - 超时兜底，确保数据安全
+   - 完全自动化，无需记忆
+
 2. **远程仓库**：建议使用 GitHub/GitLab 等托管服务，实现云端备份
-3. **提交频率**：每次文档变更都会提交，形成完整的变更历史
-4. **分支策略**：建议使用 `main/master` 分支，简单直接
-5. **冲突处理**：如有冲突，手动解决后再继续操作
+
+3. **防抖时间调整**：
+   - 频繁修改场景：增加 `debounce_minutes` 到 10-15 分钟
+   - 正常使用：保持默认 5 分钟
+   - 快速迭代：减少到 2-3 分钟
+
+4. **兜底时间调整**：
+   - 重要文档：减少 `max_idle_minutes` 到 15 分钟，更频繁备份
+   - 日常使用：保持默认 30 分钟
+
+5. **分支策略**：建议使用 `main/master` 分支，简单直接
+
+6. **冲突处理**：如有冲突，手动解决后再继续操作
+
+7. **团队协作**：
+   - 如果多人同时编辑，建议降低 `debounce_minutes`
+   - 或者切换到 `auto_commit: false`，使用 `/sg-task sync` 手动同步
 
 ---
 
@@ -1449,4 +1705,4 @@ Claude：🚀 正在同步到 Git...
 9. **智能推断** - 通过对话自动更新进度，减少手动操作
 10. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
 11. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新
-12. **自动备份** - 任务文档自动提交到 Git，形成完整的变更历史记录
+12. **智能备份** - 防抖合并 + 重要立即提交 + 超时兜底，确保数据永不丢失且提交历史清晰
