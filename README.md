@@ -233,15 +233,24 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 
 创建任务时，仓库按名称排序显示，格式为：`手动名称 (目录名, 类型)`
 
+**勾选交互方式：**
+- 显示带序号的复选框列表
+- 支持多种输入方式：序号、名称、混合输入
+- 支持多选
+
 ```bash
 用户：/sg-task create 优化登录
 
-请选择涉及仓库：
+请勾选涉及仓库（可多选，输入序号或名称）：
 
-- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
-- [ ] 批发后端（pf-backend，backend）
-- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
-- [ ] 商户后端（senguo-merchantcenter-backend，backend）
+- [ ] 1. 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 2. 批发后端（pf-backend，backend）
+- [ ] 3. 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 4. 商户后端（senguo-merchantcenter-backend，backend）
+
+> 2, 3
+或
+> 后端、移动端
 ```
 
 ### 中途添加/删除仓库
@@ -257,11 +266,14 @@ Claude：当前任务：2024-01-28_优化登录
 - 批发后端（pf-backend，backend）
 - 批发移动端（senguo-pf-easy-mobile，mobile）
 
-请选择要添加的仓库：
-- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
-- [ ] 商户后端（senguo-merchantcenter-backend，backend）
+请勾选要添加的仓库（可多选）：
+- [ ] 1. 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 2. 商户后端（senguo-merchantcenter-backend，backend）
 
-用户：添加 批发PC端
+> 1
+或
+> 批发PC端
+
 ✅ 已添加
 
 # 删除仓库

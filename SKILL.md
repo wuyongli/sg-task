@@ -248,15 +248,17 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 
 Claude：正在创建任务...
 
-请选择涉及仓库：
+请勾选涉及仓库（可多选，输入序号或名称）：
 
-- [ ] 财务SDK（senguo-finance-sdk，other）
-- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
-- [ ] 批发后端（pf-backend，backend）
-- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
-- [ ] 商户后端（senguo-merchantcenter-backend，backend）
+- [ ] 1. 财务SDK（senguo-finance-sdk，other）
+- [ ] 2. 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 3. 批发后端（pf-backend，backend）
+- [ ] 4. 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 5. 商户后端（senguo-merchantcenter-backend，backend）
 
-[用户选择：批发后端 + 批发移动端]
+> 3, 4
+或
+> 批发后端、批发移动端
 
 正在检测各仓库分支...
 ✅ 批发后端 (pf-backend): feature/login-opt
@@ -269,6 +271,15 @@ Claude：正在创建任务...
 💡 提示：检测到涉及后端和移动端，建议创建接口文档用于联调
    使用 /sg-task doc api 创建
 ```
+
+**交互说明：**
+- 用户可以通过以下方式选择仓库：
+  - 输入序号：`3, 4` 或 `3 4` 或 `3和4`
+  - 输入名称：`批发后端、批发移动端` 或 `批发后端 移动端`
+  - 混合输入：`3、移动端` 或 `批发后端和4`
+- 支持多选，用逗号、空格、顿号或"和"字分隔
+- 输入 `全选` 或 `all` 选择所有仓库
+- 输入 `取消` 或空选择跳过仓库选择（不推荐）
 
 **自动检测分支逻辑：**
 ```python
@@ -314,12 +325,14 @@ Claude：当前任务：2024-01-28_优化登录
 - 批发后端 (pf-backend，backend)
 - 批发移动端 (senguo-pf-easy-mobile，mobile)
 
-请选择要添加的仓库：
+请勾选要添加的仓库（可多选）：
 
-- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
-- [ ] 商户后端（senguo-merchantcenter-backend，backend）
+- [ ] 1. 批发PC端（senguo-pf-manage-frontend，pc）
+- [ ] 2. 商户后端（senguo-merchantcenter-backend，backend）
 
-用户：添加 批发PC端
+> 1
+或
+> 批发PC端
 
 正在检测分支...
 ✅ 批发PC端 (senguo-pf-manage-frontend): feature/login-page
@@ -850,13 +863,15 @@ cd ../senguo-pf-manage-frontend && git checkout -b feature/login-page
 # 2. 创建任务
 用户：/sg-task create 优化登录功能
 
-# 3. 选择涉及仓库
-Claude：请选择涉及仓库：
-- [ ] 批发后端（pf-backend，backend）
-- [ ] 批发移动端（senguo-pf-easy-mobile，mobile）
-- [ ] 批发PC端（senguo-pf-manage-frontend，pc）
+# 3. 勾选涉及仓库
+Claude：请勾选涉及仓库（可多选，输入序号或名称）：
+- [ ] 1. 批发后端（pf-backend，backend）
+- [ ] 2. 批发移动端（senguo-pf-easy-mobile，mobile）
+- [ ] 3. 批发PC端（senguo-pf-manage-frontend，pc）
 
-用户：选择后端和移动端
+> 1, 2
+或
+> 后端、移动端
 
 # 4. skill 自动检测各仓库分支并创建任务
 Claude：正在检测各仓库分支...
