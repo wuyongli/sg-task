@@ -396,11 +396,12 @@ Claude：当前任务涉及的仓库：
 
 **流程：**
 
-1. 获取当前 Git 分支
-2. 在 `.tasks` 中搜索包含该分支的 `meta.md`
-3. 显示任务信息
+1. 扫描所有配置仓库的当前分支
+2. 在所有任务中查找匹配的分支
+3. **如果检测到多个任务，显示列表让用户选择（单选）**
+4. 显示选中的任务信息
 
-**示例：**
+**示例（单个任务）：**
 ```bash
 用户：/sg-task show
 
@@ -432,16 +433,131 @@ Claude：📋 当前任务：优化登录功能
 - /sg-task doc api - 创建接口文档
 ```
 
-**查找逻辑：**
+**示例（多个任务 - 交互选择）：**
+```bash
+用户：/sg-task show
+
+Claude：⚠️ 检测到多个任务：
+
+[显示单选列表]
+○ 优化登录功能 (2024-01-28_优化登录)
+  匹配仓库: 批发后端(feature/login-1)
+
+○ 添加购物车 (2024-01-27_添加购物车)
+  匹配仓库: 批发移动端(feature/cart-2), 批发PC端(feature/cart-pc)
+
+[用户选择：优化登录功能]
+
+📋 当前任务：优化登录功能
+
+[显示任务详细信息...]
+```
+
+**查找逻辑（多任务检测与交互选择）：**
 ```python
-def find_current_task():
-    current_branch = git_branch_show_current()
-    for task_dir in glob(".tasks/*/"):
-        meta = read_yaml(f"{task_dir}/meta.md")
-        for repo in meta['repositories']:
-            if repo['branch'] == current_branch:
-                return task_dir, meta
-    return None, None
+def find_all_matched_tasks():
+    """扫描所有仓库，找到匹配的任务（可能有多个）"""
+
+    # 1. 获取配置文件中所有仓库
+    config = load_config()
+    if not config or 'repositories' not in config:
+        return []
+
+    matched_tasks = {}  # task_id -> {task_dir, meta, matched_repos}
+
+    # 2. 扫描每个仓库的当前分支
+    for repo_config in config['repositories']:
+        repo_path = repo_config['path']
+        repo_name = repo_config['name']
+
+        # 检查仓库是否存在
+        if not os.path.exists(repo_path):
+            continue
+
+        # 获取该仓库的当前分支
+        current_branch = git_branch_show_current(repo_path)
+        if not current_branch:
+            continue
+
+        # 3. 在所有任务中查找包含该分支的任务
+        for task_dir in glob(".tasks/*/"):
+            meta = read_yaml(f"{task_dir}/meta.md")
+            task_id = meta['task_id']
+
+            # 检查该任务的仓库中是否包含当前分支
+            for repo_in_task in meta['repositories']:
+                if repo_in_task['branch'] == current_branch:
+                    # 找到匹配的任务
+                    if task_id not in matched_tasks:
+                        matched_tasks[task_id] = {
+                            'task_dir': task_dir,
+                            'meta': meta,
+                            'matched_repos': []
+                        }
+
+                    # 记录匹配的仓库
+                    matched_tasks[task_id]['matched_repos'].append({
+                        'name': repo_name,
+                        'branch': current_branch,
+                        'type': repo_config['type']
+                    })
+                    break
+
+    # 4. 转换为列表返回
+    return list(matched_tasks.values())
+
+def select_task_interactively(matched_tasks):
+    """交互式选择任务（单选 - 使用 AskUserQuestion）"""
+
+    if len(matched_tasks) == 0:
+        return None, None
+    elif len(matched_tasks) == 1:
+        # 只有一个任务，直接返回
+        task = matched_tasks[0]
+        return task['task_dir'], task['meta']
+
+    # 多个任务，使用 AskUserQuestion 进行单选
+    status_icon_map = {
+        "in_progress": "🔄",
+        "completed": "✅",
+        "paused": "⏸️"
+    }
+
+    # 构建选项
+    options = []
+    for task in matched_tasks:
+        meta = task['meta']
+        status_icon = status_icon_map.get(meta['status'], "📋")
+
+        # 显示匹配的仓库
+        matched_repos = task['matched_repos']
+        repo_list = ", ".join([f"{r['name']}({r['branch']})" for r in matched_repos])
+
+        label = f"{status_icon} {meta['task_name']}"
+        description = f"任务ID: {meta['task_id']}\n匹配仓库: {repo_list}"
+
+        options.append({
+            'label': label,
+            'description': description,
+            'task': task
+        })
+
+    # 使用 AskUserQuestion 工具
+    question = "⚠️ 检测到多个任务，请选择当前工作的任务"
+    user_selection = ask_user_question(
+        question=question,
+        options=[{'label': opt['label'], 'description': opt['description']} for opt in options],
+        multi_select=False  # 单选
+    )
+
+    # 找到用户选择的任务
+    for opt in options:
+        if opt['label'] == user_selection:
+            return opt['task']['task_dir'], opt['task']['meta']
+
+    # 默认返回第一个
+    first = matched_tasks[0]
+    return first['task_dir'], first['meta']
 ```
 
 ---
