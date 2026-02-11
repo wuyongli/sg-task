@@ -73,9 +73,17 @@ commit_message_style: emoji # 提交信息风格：emoji / simple / detail
 
 ### 配置管理
 
-- **自动检测新仓库** - 每次使用时自动扫描，发现新仓库会提示配置
-- **仓库缺失提醒** - 配置中的仓库不存在时会提示是否移除
+sg-task 支持两种方式管理仓库配置：
+
+**方式1：命令行管理（推荐）**
+- **首次初始化** - 自动扫描并配置，首次使用时执行一次
+- **添加仓库** - 使用 `/sg-task add-repo-config` 添加新仓库
 - **手动编辑** - 可直接编辑 `~/.claude/sg-task/config.yaml` 文件
+
+**方式2：手动编辑**
+- 直接编辑配置文件添加/删除仓库
+- 适合高级用户
+
 - **自动同步 Git** - 支持任务文档自动提交到 Git 仓库（详见"自动 Git 同步"章节）
 
 ## 目录结构
@@ -152,7 +160,9 @@ repositories:
 
 ### 首次初始化
 
-**触发时机：** 第一次使用任何 `/sg-task` 命令时自动执行
+**触发时机：** 配置文件不存在时（`~/.claude/sg-task/config.yaml`）
+
+**重要：** 此流程只在第一次使用时执行一次，配置文件创建后不再执行。
 
 **流程：**
 
@@ -164,9 +174,11 @@ repositories:
 ```bash
 用户：/sg-task create 优化登录功能
 
-Claude：🔍 首次使用，正在初始化仓库配置...
+Claude：⚠️ 首次使用，正在初始化仓库配置...
 
-扫描到以下 Git 仓库（共 5 个）：
+🔍 正在扫描当前目录的 Git 仓库...
+
+发现以下 Git 仓库（共 5 个）：
 
 1. ./pf-backend
 2. ./senguo-pf-easy-mobile
@@ -180,42 +192,50 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 这个仓库叫什么名字？（输入名称，如"批发后端"）
 > 批发后端
 
-是什么类型？
-- [ ] backend
-- [ ] pc
-- [ ] mobile
-- [ ] mini-program
-- [ ] native
-- [ ] other
-> backend
+[单选列表] 是什么类型？
+○ backend
+○ pc
+○ mobile
+○ mini-program
+○ native
+○ other
+
+[用户选择：backend]
 
 **2. ./senguo-pf-easy-mobile**
 这个仓库叫什么名字？
 > 批发移动端
 
-是什么类型？
-> mobile
+[单选列表] 是什么类型？
+○ backend
+○ pc
+○ mobile
+○ mini-program
+○ native
+○ other
+
+[用户选择：mobile]
 
 **3. ./senguo-pf-manage-frontend**
 这个仓库叫什么名字？
 > 批发PC端
 
-是什么类型？
-> pc
+[单选列表] 是什么类型？
+[用户选择：pc]
 
 **4. ./senguo-merchantcenter-backend**
 这个仓库叫什么名字？
 > 商户后端
 
-是什么类型？
-> backend
+[单选列表] 是什么类型？
+[用户选择：backend]
 
 **5. ./senguo-finance-sdk**
 这个仓库叫什么名字？
 > 财务SDK
 
-是什么类型？
-> other
+[单选列表] 是什么类型？
+[用户选择：other]
 
 ✅ 配置完成！已保存到 ~/.claude/sg-task/config.yaml
 
@@ -225,6 +245,8 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 - 批发后端（pf-backend，backend）
 - 批发移动端（senguo-pf-easy-mobile，mobile）
 - 商户后端（senguo-merchantcenter-backend，backend）
+
+💡 提示：如需添加新仓库，使用 /sg-task add-repo-config 命令
 ```
 
 ---
@@ -237,16 +259,14 @@ Claude：🔍 首次使用，正在初始化仓库配置...
 
 **流程：**
 
-1. 检查配置文件是否存在（不存在则执行首次初始化）
-2. 检查是否有新仓库需要配置
-3. 检查配置中的仓库是否仍然存在
-4. 从配置文件读取可用仓库列表
-5. 按仓库名称排序显示仓库供选择
-6. **自动检测每个仓库的当前 Git 分支**
-7. 收集任务信息（名称、描述等）
-8. 创建任务目录：`.tasks/YYYY-MM-DD_任务名称/`
-9. 生成 `meta.md`（自动填充分支和仓库信息，**支持不同仓库不同分支名**）
-10. 根据仓库类型给出智能建议
+1. 检查配置文件是否存在（不存在则执行首次初始化，仅此一次）
+2. 从配置文件读取可用仓库列表
+3. 按仓库名称排序显示仓库供选择
+4. **自动检测每个仓库的当前 Git 分支**
+5. 收集任务信息（名称、描述等）
+6. 创建任务目录：`.tasks/YYYY-MM-DD_任务名称/`
+7. 生成 `meta.md`（自动填充分支和仓库信息，**支持不同仓库不同分支名**）
+8. 根据仓库类型给出智能建议
 
 **示例：**
 ```bash
@@ -320,6 +340,8 @@ def detect_branches(selected_repos):
 5. **自动检测新仓库的当前 Git 分支**
 6. 更新 `meta.md`
 
+**注意：** 此命令只能添加已在配置文件中的仓库。如需向全局配置添加新仓库，请使用 `/sg-task add-repo-config` 命令。
+
 **示例：**
 ```bash
 用户：/sg-task add-repo
@@ -348,6 +370,74 @@ Claude：当前任务：2024-01-28_优化登录
    使用 /sg-task doc development
    使用 /sg-task doc api
 ```
+
+---
+
+### 添加仓库配置
+
+```bash
+/sg-task add-repo-config
+```
+
+**用于向全局配置中添加新的仓库。** 不同于 `add-repo`（将仓库添加到特定任务），此命令将仓库添加到全局配置文件中，供后续创建任务时选择。
+
+**触发时机：** 当项目中有新仓库需要管理时
+
+**流程：**
+
+1. 扫描当前目录，发现未配置的 Git 仓库
+2. 询问新仓库的名称和类型
+3. 添加到配置文件：`~/.claude/sg-task/config.yaml`
+
+**示例：**
+```bash
+用户：/sg-task add-repo-config
+
+Claude：🔍 正在扫描当前目录...
+
+发现以下未配置的 Git 仓库（共 2 个）：
+
+1. ./new-project-backend
+2. ./new-project-frontend
+
+现在需要为每个仓库配置名称和类型：
+
+**1. ./new-project-backend**
+这个仓库叫什么名字？
+> 新项目后端
+
+[单选列表] 是什么类型？
+○ backend
+○ pc
+○ mobile
+○ mini-program
+○ native
+○ other
+
+[用户选择：backend]
+
+**2. ./new-project-frontend**
+这个仓库叫什么名字？
+> 新项目前端
+
+[单选列表] 是什么类型？
+[用户选择：pc]
+
+✅ 已添加到配置：~/.claude/sg-task/config.yaml
+
+当前已配置的仓库：
+- 财务SDK（senguo-finance-sdk，other）
+- 批发PC端（senguo-pf-manage-frontend，pc）
+- 批发后端（pf-backend，backend）
+- 批发移动端（senguo-pf-easy-mobile，mobile）
+- 商户后端（senguo-merchantcenter-backend，backend）
+- 新项目后端（new-project-backend，backend）⭐ 新增
+- 新项目前端（new-project-frontend，pc）⭐ 新增
+```
+
+**与 add-repo 的区别：**
+- `add-repo-config`：添加到全局配置，供所有任务使用
+- `add-repo`：将已配置的仓库添加到特定任务
 
 ---
 
@@ -396,10 +486,16 @@ Claude：当前任务涉及的仓库：
 
 **流程：**
 
-1. 扫描所有配置仓库的当前分支
-2. 在所有任务中查找匹配的分支
-3. **如果检测到多个任务，显示列表让用户选择（单选）**
-4. 显示选中的任务信息
+1. 读取配置文件中的仓库列表（不扫描目录）
+2. 获取已配置仓库的当前分支
+3. 在所有任务中查找匹配的分支
+4. **如果检测到多个任务，显示列表让用户选择（单选）**
+5. 显示选中的任务信息
+
+**注意：**
+- 此命令只读取配置文件，不会扫描目录或验证仓库是否存在，因此速度很快。
+- 获取仓库分支时应静默执行，不要显示"使用兼容指令"等技术细节。
+- 直接显示任务信息，避免中间过程的提示。
 
 **示例（单个任务）：**
 ```bash
@@ -456,26 +552,22 @@ Claude：⚠️ 检测到多个任务：
 **查找逻辑（多任务检测与交互选择）：**
 ```python
 def find_all_matched_tasks():
-    """扫描所有仓库，找到匹配的任务（可能有多个）"""
+    """读取配置仓库的分支，找到匹配的任务（可能有多个）"""
 
-    # 1. 获取配置文件中所有仓库
+    # 1. 读取配置文件（快速，不扫描目录）
     config = load_config()
     if not config or 'repositories' not in config:
         return []
 
     matched_tasks = {}  # task_id -> {task_dir, meta, matched_repos}
 
-    # 2. 扫描每个仓库的当前分支
+    # 2. 遍历已配置的仓库，获取当前分支（静默执行）
     for repo_config in config['repositories']:
         repo_path = repo_config['path']
         repo_name = repo_config['name']
 
-        # 检查仓库是否存在
-        if not os.path.exists(repo_path):
-            continue
-
-        # 获取该仓库的当前分支
-        current_branch = git_branch_show_current(repo_path)
+        # 获取该仓库的当前分支（静默执行，不显示技术细节）
+        current_branch = git_branch_show_current(repo_path, silent=True)
         if not current_branch:
             continue
 
@@ -1179,51 +1271,29 @@ def smart_document_sync():
 
 ---
 
-### 新仓库自动检测
+### 手动管理仓库配置（备选方案）
 
-每次执行 `/sg-task` 命令时自动扫描项目目录，发现新仓库会提示配置：
+**除了使用命令行管理外，也可以手动编辑配置文件：**
 
-**示例：**
 ```bash
-用户：/sg-task create 新任务
+# 编辑配置文件
+vi ~/.claude/sg-task/config.yaml
 
-Claude：⚠️ 检测到新仓库：./new-project-backend
+# 添加新仓库
+repositories:
+  - name: 新仓库名称
+    type: backend
+    path: /path/to/new-repo
 
-这个仓库叫什么名字？（输入名称）
-> 新项目后端
-
-是什么类型？
-- [ ] backend
-- [ ] pc
-- [ ] mobile
-- [ ] mini-program
-- [ ] native
-- [ ] other
-> backend
-
-✅ 已添加到配置：~/.claude/sg-task/config.yaml
+# 删除不需要的仓库（直接删除对应的条目）
 ```
 
----
+**适用场景：**
+- 批量添加/删除多个仓库
+- 需要精确控制配置内容
+- 高级用户自定义配置
 
-### 仓库缺失处理
-
-每次执行 `/sg-task` 命令时验证配置中的仓库是否存在：
-
-**示例：**
-```bash
-Claude：⚠️ 配置中的仓库不存在：
-- ./pf-backend
-
-可能原因：
-- 仓库已删除
-- 仓库已移动
-
-是否从配置中移除？(y/n)
-> y
-
-✅ 已从配置中移除
-```
+**推荐：** 大多数情况下使用 `/sg-task add-repo-config` 命令更方便。
 
 ---
 
@@ -1698,11 +1768,11 @@ Claude：📋 当前状态：
 2. **按需扩展** - 需要什么文档就创建什么
 3. **分支驱动** - 通过 Git 分支自动关联任务，各仓库分支名可不同
 4. **手动命名** - 用户手动输入仓库名称，灵活自定义（如"批发后端"、"商户前端"）
-5. **动态配置** - 首次扫描自动配置，支持中途添加/删除仓库
+5. **一次配置** - 首次使用扫描配置，后续不再扫描，保持快速响应
 6. **类型清晰** - 明确标注仓库类型（backend/pc/mobile/mini-program/native/other）
 7. **名称排序** - 所有仓库列表按名称排序展示
 8. **上下文保持** - 新开窗口也能自动识别任务
 9. **智能推断** - 通过对话自动更新进度，减少手动操作
 10. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
-11. **自动维护** - 自动检测新仓库和缺失仓库，保持配置更新
+11. **快速响应** - 不重复扫描，不验证仓库，命令执行速度极快
 12. **智能备份** - 防抖合并 + 重要立即提交 + 超时兜底，确保数据永不丢失且提交历史清晰
