@@ -307,19 +307,16 @@ Claude：正在创建任务...
 - 输入 `取消` 或空选择跳过仓库选择（不推荐）
 
 **自动检测分支逻辑：**
-```python
-def detect_branches(selected_repos):
-    """自动检测每个仓库的当前分支"""
-    result = {}
-    for repo in selected_repos:
-        repo_path = repo['path']
-        # 切换到仓库目录
-        os.chdir(repo_path)
-        # 获取当前分支
-        branch = git_branch_show_current()
-        result[repo['name']] = branch
-    return result
+
+批量获取选中仓库的分支（一条命令，一次确认）：
+```bash
+# 一次获取所有选中仓库的分支
+cd /path/to/repo1 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+cd /path/to/repo2 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+cd /path/to/repo3 && git rev-parse --abbrev-ref HEAD 2>/dev/null
 ```
+
+注意：使用 `git rev-parse --abbrev-ref HEAD` 兼容所有 git 版本。
 
 ---
 
@@ -493,9 +490,14 @@ Claude：当前任务涉及的仓库：
 5. 显示选中的任务信息
 
 **注意：**
-- 此命令只读取配置文件，不会扫描目录或验证仓库是否存在，因此速度很快。
-- 获取仓库分支时应静默执行，不要显示"使用兼容指令"等技术细节。
-- 直接显示任务信息，避免中间过程的提示。
+- **批量获取分支**：使用一条命令获取所有仓库的分支，只需确认一次
+  ```bash
+  cd repo1 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+  cd repo2 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+  cd repo3 && git rev-parse --abbrev-ref HEAD 2>/dev/null
+  ```
+- 使用 `git rev-parse --abbrev-ref HEAD`（兼容所有 git 版本）
+- 不要显示"正在读取配置"、"获取分支"等技术细节
 
 **示例（单个任务）：**
 ```bash
@@ -550,106 +552,36 @@ Claude：⚠️ 检测到多个任务：
 ```
 
 **查找逻辑（多任务检测与交互选择）：**
-```python
-def find_all_matched_tasks():
-    """读取配置仓库的分支，找到匹配的任务（可能有多个）"""
 
-    # 1. 读取配置文件（快速，不扫描目录）
-    config = load_config()
-    if not config or 'repositories' not in config:
-        return []
+1. **读取配置文件**：`~/.claude/sg-task/config.yaml`
+2. **批量获取所有仓库的分支**（一条命令，一次确认）
+3. 在所有任务中查找匹配的分支
+4. 如果有多个任务，让用户选择
 
-    matched_tasks = {}  # task_id -> {task_dir, meta, matched_repos}
+**批量获取分支示例：**
+```bash
+# 一次获取所有仓库的分支（只需要确认一次）
+cd /path/to/repo1 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+cd /path/to/repo2 && git rev-parse --abbrev-ref HEAD 2>/dev/null && \
+cd /path/to/repo3 && git rev-parse --abbrev-ref HEAD 2>/dev/null
+```
 
-    # 2. 遍历已配置的仓库，获取当前分支（静默执行）
-    for repo_config in config['repositories']:
-        repo_path = repo_config['path']
-        repo_name = repo_config['name']
+**注意：**
+- 使用 `git rev-parse --abbrev-ref HEAD`（兼容所有 git 版本）
+- 一条命令获取所有仓库分支，避免多次确认
+- 不要显示"正在读取配置"、"获取分支"等技术细节
 
-        # 获取该仓库的当前分支（静默执行，不显示技术细节）
-        current_branch = git_branch_show_current(repo_path, silent=True)
-        if not current_branch:
-            continue
+**选择任务（单选）：**
 
-        # 3. 在所有任务中查找包含该分支的任务
-        for task_dir in glob(".tasks/*/"):
-            meta = read_yaml(f"{task_dir}/meta.md")
-            task_id = meta['task_id']
+当检测到多个任务时，使用 AskUserQuestion 工具让用户选择：
 
-            # 检查该任务的仓库中是否包含当前分支
-            for repo_in_task in meta['repositories']:
-                if repo_in_task['branch'] == current_branch:
-                    # 找到匹配的任务
-                    if task_id not in matched_tasks:
-                        matched_tasks[task_id] = {
-                            'task_dir': task_dir,
-                            'meta': meta,
-                            'matched_repos': []
-                        }
+```
+[显示单选列表]
+○ 任务A (2024-01-28_任务A)
+  匹配仓库: 仓库1(branch1), 仓库2(branch2)
 
-                    # 记录匹配的仓库
-                    matched_tasks[task_id]['matched_repos'].append({
-                        'name': repo_name,
-                        'branch': current_branch,
-                        'type': repo_config['type']
-                    })
-                    break
-
-    # 4. 转换为列表返回
-    return list(matched_tasks.values())
-
-def select_task_interactively(matched_tasks):
-    """交互式选择任务（单选 - 使用 AskUserQuestion）"""
-
-    if len(matched_tasks) == 0:
-        return None, None
-    elif len(matched_tasks) == 1:
-        # 只有一个任务，直接返回
-        task = matched_tasks[0]
-        return task['task_dir'], task['meta']
-
-    # 多个任务，使用 AskUserQuestion 进行单选
-    status_icon_map = {
-        "in_progress": "🔄",
-        "completed": "✅",
-        "paused": "⏸️"
-    }
-
-    # 构建选项
-    options = []
-    for task in matched_tasks:
-        meta = task['meta']
-        status_icon = status_icon_map.get(meta['status'], "📋")
-
-        # 显示匹配的仓库
-        matched_repos = task['matched_repos']
-        repo_list = ", ".join([f"{r['name']}({r['branch']})" for r in matched_repos])
-
-        label = f"{status_icon} {meta['task_name']}"
-        description = f"任务ID: {meta['task_id']}\n匹配仓库: {repo_list}"
-
-        options.append({
-            'label': label,
-            'description': description,
-            'task': task
-        })
-
-    # 使用 AskUserQuestion 工具
-    question = "⚠️ 检测到多个任务，请选择当前工作的任务"
-    user_selection = ask_user_question(
-        question=question,
-        options=[{'label': opt['label'], 'description': opt['description']} for opt in options],
-        multi_select=False  # 单选
-    )
-
-    # 找到用户选择的任务
-    for opt in options:
-        if opt['label'] == user_selection:
-            return opt['task']['task_dir'], opt['task']['meta']
-
-    # 默认返回第一个
-    first = matched_tasks[0]
-    return first['task_dir'], first['meta']
+○ 任务B (2024-01-27_任务B)
+  匹配仓库: 仓库3(branch3)
 ```
 
 ---
@@ -1774,5 +1706,5 @@ Claude：📋 当前状态：
 8. **上下文保持** - 新开窗口也能自动识别任务
 9. **智能推断** - 通过对话自动更新进度，减少手动操作
 10. **文档联动** - 自动检测文档差异并智能提示，无需手动同步
-11. **快速响应** - 不重复扫描，不验证仓库，命令执行速度极快
+11. **快速响应** - 不重复扫描，不验证仓库，批量获取 Git 分支（一条命令一次确认），命令执行速度极快
 12. **智能备份** - 防抖合并 + 重要立即提交 + 超时兜底，确保数据永不丢失且提交历史清晰
