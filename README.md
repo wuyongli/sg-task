@@ -47,8 +47,11 @@ cp -r sg-task ~/.claude/skills/
 # 创建任务（首次使用会自动初始化仓库配置）
 /sg-task create 优化登录功能
 
-# 显示当前任务
+# 显示当前任务（只显示状态）
 /sg-task show
+
+# 显示当前任务 + 加载文档到上下文（新开窗口时使用）
+/sg-task show --load
 
 # 列出所有任务
 /sg-task list

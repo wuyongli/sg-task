@@ -17,6 +17,12 @@ description: 森果任务管理工具。帮助管理多仓库开发任务，每�
 - **仓库类型标注** - 明确标注前端/后端、PC/移动端/小程序/原生，快速定位
 - **项目启动信息** - 配置各项目的启动命令和端口，方便查询
 
+## 任务文件夹位置
+
+任务文件夹固定位于：**项目根目录下的 `.tasks` 目录**
+
+项目根目录在首次使用时自动检测（所有仓库的共同父目录）并写入配置文件，后续直接读取配置。
+
 ## 配置文件
 
 **配置文件位置：** `~/.claude/sg-task/config.yaml`
@@ -24,6 +30,8 @@ description: 森果任务管理工具。帮助管理多仓库开发任务，每�
 ### 配置文件格式
 
 ```yaml
+project_root: /Users/xxx/project   # 项目根目录（首次使用自动生成）
+
 repositories:
   - name: 批发后端              # 项目名称
     type: backend               # 类型
@@ -59,18 +67,24 @@ commit_message_style: emoji
 ### 查看当前任务
 
 ```bash
-/sg-task show
+/sg-task show          # 只显示任务状态
+/sg-task show --load   # 显示状态 + 加载文档到上下文
 ```
 
 **通过当前分支自动查找任务并显示信息。**
 
 **流程：**
 
-1. 读取配置文件中的仓库列表（不扫描目录）
-2. 批量获取所有仓库的当前分支
-3. 在所有任务中查找匹配的分支
+1. 读取配置文件中的 `project_root`，定位 `.tasks` 目录
+2. 批量获取所有仓库的当前分支（使用 `git rev-parse --abbrev-ref HEAD`）
+3. 匹配任务：遍历每个任务的 `meta.md`，检查仓库分支是否匹配
 4. **如果检测到多个任务，显示列表让用户选择（单选）**
 5. 显示选中的任务信息
+6. **如果带了 `--load` 参数，加载任务文档到上下文**：
+   - 读取 `meta.md`（任务元数据）
+   - 读取 `product.md`（产品需求，如存在）
+   - 读取 `development.md`（开发计划，如存在）
+   - 提示用户其他文档可按需查看
 
 **注意：**
 - **批量获取分支**：使用一条命令获取所有仓库的分支，只需确认一次
@@ -81,28 +95,66 @@ commit_message_style: emoji
 - 使用 `git rev-parse --abbrev-ref HEAD`（兼容所有 git 版本）
 - 不要显示"正在读取配置"、"获取分支"等技术细节
 
-**示例（单个任务）：**
+**示例（默认模式）：**
 ```bash
-📋 当前任务：优化登录功能
+📋 当前任务：对接支付宝转账产品
 
 📊 任务信息：
-- 任务ID：2024-01-28_优化登录
+- 任务ID：2026-02-10_对接支付宝转账产品
 - 状态：🔄 进行中
 
 📦 涉及仓库：
 🔧 批发后端 (pf-backend，backend)
-   分支：feature/login-optimization
+   分支：支付宝批量转账
    路径：../pf-backend
 
 📱 批发移动端 (senguo-pf-easy-mobile，mobile)
-   分支：feature/login-optimization
+   分支：支付宝批量转账
    路径：../senguo-pf-easy-mobile
 
 📄 已创建文档：
 - meta.md（任务元数据）
 - product.md（产品文档）
+- development.md（开发计划）
 - api.md（接口文档）
+
+💡 执行 /sg-task show --load 加载文档到上下文
 ```
+
+**示例（--load 模式）：**
+```bash
+📋 当前任务：对接支付宝转账产品
+
+📊 任务信息：
+- 任务ID：2026-02-10_对接支付宝转账产品
+- 状态：🔄 进行中
+
+📦 涉及仓库：
+🔧 批发后端 (pf-backend，backend)
+   分支：支付宝批量转账
+   路径：../pf-backend
+
+📄 已创建文档：
+- meta.md、product.md、development.md、api.md
+
+📄 正在加载任务文档...
+
+--- meta.md ---
+[文档内容]
+
+--- product.md ---
+[文档内容]
+
+--- development.md ---
+[文档内容]
+
+✅ 已加载核心文档到上下文。
+💡 其他文档：api.md（可执行 /sg-task doc api 查看）
+```
+
+**--load 特殊处理：**
+- 如果 `development.md` 过长（超过 500 行），提示：`⚠️ development.md 较长（xxx 行），建议按需查看`
+- 如果任务状态为 `completed`，提示：`ℹ️ 任务已完成，如需重新查看文档请确认`
 
 **示例（多个任务 - 交互选择）：**
 ```bash
