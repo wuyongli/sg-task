@@ -103,12 +103,19 @@ sg-task/
 └── references/        # 文档模板
     ├── config.yaml.example  # 配置文件示例
     ├── product.md     # 产品需求文档模板
-    ├── development.md # 开发计划与进度模板
-    ├── api.md         # 接口文档模板
-    ├── test.md        # 测试用例模板
-    ├── meeting.md     # 会议记录模板
+    ├── development.md # 开发计划与进度模板（含测试）
+    ├── api.md         # 接口文档模板（按需）
     └── README.md      # 任务 README 模板
 ```
+
+**文档类型说明：**
+
+| 文档 | 类型 | 说明 |
+|------|------|------|
+| meta.md | 核心 | 任务元数据（自动创建） |
+| product.md | 核心 | 产品需求文档 |
+| development.md | 核心 | 开发计划与进度（测试用例和结果写在这里） |
+| api.md | 按需 | 接口文档（仅多仓库联调时创建） |
 
 **配置文件位置：** `~/.claude/sg-task/config.yaml`（首次使用时自动创建）
 
