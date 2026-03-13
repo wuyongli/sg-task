@@ -116,7 +116,7 @@ auto_push: true                # 是否自动推送（默认: true）
 6. **如果带了 `--load` 参数，加载核心文档到上下文**：
    - 读取 `meta.md`（任务元数据）
    - 读取 `product.md`（产品需求，核心必需）
-   - 显示其他文档的存在状态和行数（不加载内容）
+   - 显示其他已创建的文档列表（不加载内容）
    - 提示用户按需加载其他文档
 
 **注意：**
@@ -151,12 +151,11 @@ auto_push: true                # 是否自动推送（默认: true）
 - product.md ✅ (产品需求)
 
 📄 其他文档（按需加载）：
-- development.md (128 行) - /sg-task doc development --load
-- api.md (45 行) - /sg-task doc api --load
+- development.md - /sg-task doc development --load
+- api.md - /sg-task doc api --load
 ```
 
 **--load 特殊处理：**
-- 如果 `development.md` 过长（超过 500 行），提示：`⚠️ development.md 较长（xxx 行），建议按需查看`
 - 如果任务状态为 `completed`，提示：`ℹ️ 任务已完成，如需重新查看文档请确认`
 
 **示例（多个任务 - 交互选择）：**
