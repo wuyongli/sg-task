@@ -1,48 +1,35 @@
-# sg-task 仓库配置文件示例
+# sg-task 配置示例
 #
-# 实际配置文件位置：~/.claude/sg-task/config.yaml
-# 本文件仅供参考，不需要修改
+# 实际路径：~/.claude/sg-task/config.yaml
+
+project_root: /path/to/your-project-root
 
 repositories:
-  # 后端仓库
-  - name: 批发后端              # 手动输入的名称
+  - name: 批发后端
+    key: pf-backend
     type: backend
-    path: /Users/wuyongli/Documents/sg-project/pf-backend
+    path: /path/to/your-project-root/pf-backend
 
-  # 移动端App
-  - name: 批发移动端            # 手动输入的名称
+  - name: 批发移动端
+    key: senguo-pf-easy-mobile
     type: mobile
-    path: /Users/wuyongli/Documents/sg-project/senguo-pf-easy-mobile
+    path: /path/to/your-project-root/senguo-pf-easy-mobile
 
-  # PC端前端
-  - name: 批发PC端              # 手动输入的名称
+  - name: 批发PC端
+    key: senguo-pf-manage-frontend
     type: pc
-    path: /Users/wuyongli/Documents/sg-project/senguo-pf-manage-frontend
+    path: /path/to/your-project-root/senguo-pf-manage-frontend
 
-  # SDK或其他工具库
-  - name: 财务SDK               # 手动输入的名称
-    type: other
-    path: /Users/wuyongli/Documents/sg-project/senguo-finance-sdk
-
-  # 商户中心后端
-  - name: 商户后端              # 手动输入的名称
+  - name: 商户后端
+    key: senguo-merchantcenter-backend
     type: backend
-    path: /Users/wuyongli/Documents/sg-project/senguo-merchantcenter-backend
+    path: /path/to/your-project-root/senguo-merchantcenter-backend
 
-  # 商户小程序
-  - name: 商户小程序            # 手动输入的名称
-    type: mini-program
-    path: /Users/wuyongli/Documents/sg-project/merchant-mini-program
+auto_commit: true
+auto_push: true
 
-# 仓库类型说明：
-# backend       - 后端
-# pc            - PC端前端
-# mobile        - 移动端App
-# mini-program  - 小程序
-# native        - 原生应用
-# other         - 其他类型（也参与任务管理）
-
-# 使用说明：
-# 1. 首次使用 sg-task 时会自动创建 ~/.claude/sg-task/config.yaml
-# 2. 可以直接编辑该文件手动配置
-# 3. 每次使用时会自动检测新仓库和缺失仓库
+# 仓库类型：
+# backend / pc / mobile / mini-program / native / other
+#
+# `name` 是业务显示名，`key` 通常取目录名并保持稳定
+# `path` 通常写用户机器上的真实仓库绝对路径

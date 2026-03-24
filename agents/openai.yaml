@@ -1,0 +1,4 @@
+interface:
+  display_name: "SG Task"
+  short_description: "管理多仓库任务上下文与文档工作流"
+  default_prompt: "Use $sg-task to identify the current task, load only the necessary task context, and continue the multi-repo workflow."
