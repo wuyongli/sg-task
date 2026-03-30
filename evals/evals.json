@@ -52,19 +52,45 @@
     },
     {
       "id": 4,
-      "name": "show-load 只加载关键区块",
+      "name": "show-load 默认加载主档快照",
       "prompt": "新开了一个窗口，执行 /sg-task show --load 恢复上下文。",
-      "expected_output": "应该先读取 meta.md，再按 context_refs 加载目标、范围、当前状态、进行中、阻塞和下一步，而不是整份全文加载。",
+      "expected_output": "应该先根据当前仓库、当前分支和 project_root 在 <project_root>/.tasks 下定位任务，再读取 meta.md，并默认返回任务名称、状态、仓库与分支、文档列表，以及已有 summary 和 always_load，而不是继续深读 product.md 或 development.md。",
       "assertions": [
         {
-          "text": "提到关键区块加载",
+          "text": "提到主档快照",
           "type": "output_contains",
-          "pattern": "目标|改动范围|当前状态|下一步"
+          "pattern": "meta.md|任务名称|文档列表|summary|always_load"
         }
       ]
     },
     {
       "id": 5,
+      "name": "show-load 不扫描整个用户目录",
+      "prompt": "新线程里执行 /sg-task show --load 恢复任务时，应该如何查找任务？",
+      "expected_output": "应该只根据当前仓库、当前分支和 project_root，在 <project_root>/.tasks 下定位任务，而不是扫描整个 /Users 或多个历史 .tasks 目录。",
+      "assertions": [
+        {
+          "text": "强调快速路径",
+          "type": "output_contains",
+          "pattern": "project_root|.tasks|当前仓库|当前分支"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "show-load 成功时不播报内部过程",
+      "prompt": "执行 /sg-task show --load 成功恢复任务后，输出应该是什么风格？",
+      "expected_output": "应该直接输出任务快照，不应播报 pwd、find、已浏览几个文件等内部过程，除非定位失败。",
+      "assertions": [
+        {
+          "text": "强调不播报内部过程",
+          "type": "output_contains",
+          "pattern": "直接输出|不应播报|除非定位失败"
+        }
+      ]
+    },
+    {
+      "id": 7,
       "name": "补挂仓库必须带分支",
       "prompt": "给当前任务补挂批发PC端仓库。",
       "expected_output": "应该读取该仓库当前分支；如果能绑定则更新 meta.md，如果仓库没有可绑定分支则要求先切换或创建分支。",
@@ -77,7 +103,7 @@
       ]
     },
     {
-      "id": 6,
+      "id": 8,
       "name": "创建产品文档",
       "prompt": "为当前任务创建 product.md，明确登录优化的背景、范围和验收标准。",
       "expected_output": "应该创建 product.md，并按固定章节组织背景、目标与成功指标、改动范围、不在本次范围事项和验收标准。",
@@ -95,7 +121,33 @@
       ]
     },
     {
-      "id": 7,
+      "id": 9,
+      "name": "缺少区块时不推断",
+      "prompt": "当前任务的 development.md 里没有阻塞问题和下一步计划，执行 /sg-task show --load 后会怎么处理？",
+      "expected_output": "应该明确返回未记录或提示缺少对应区块，不能自行生成阻塞点或下一步。",
+      "assertions": [
+        {
+          "text": "明确不推断",
+          "type": "output_contains",
+          "pattern": "未记录|缺少对应区块|不能推断"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "name": "meta 中的短事实支持跨线程续做",
+      "prompt": "当前任务的 meta.md 里已经有 summary 和 always_load，执行 /sg-task show --load 后，AI 应该拿到哪些信息？",
+      "expected_output": "应该优先返回 meta.md 中的 summary 和 always_load，帮助 AI 在同一任务下继续处理新的需求点，而不是展开整个 product.md 或 development.md。",
+      "assertions": [
+        {
+          "text": "强调 always_load 作用",
+          "type": "output_contains",
+          "pattern": "summary|always_load|新的需求点|不展开"
+        }
+      ]
+    },
+    {
+      "id": 11,
       "name": "读取开发进度",
       "prompt": "显示一下当前任务进度。",
       "expected_output": "应该基于 development.md 的“当前状态、进行中、待开始、已完成、阻塞问题、下一步计划”生成进度摘要，而不是依赖冗长测试模板。",
@@ -108,7 +160,7 @@
       ]
     },
     {
-      "id": 8,
+      "id": 12,
       "name": "手动备份模式",
       "prompt": "当前项目把 auto_commit 关掉了，更新完 development.md 后怎么备份？",
       "expected_output": "应该说明文档可以继续更新，但不会自动提交，需要使用 /sg-task sync 手动备份到 Git。",

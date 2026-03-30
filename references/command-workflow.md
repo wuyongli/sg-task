@@ -15,6 +15,12 @@
 7. 生成任务目录和 `meta.md`
 8. 按需建议创建 `product.md`、`development.md`、`api.md`
 
+建议：
+
+- 在 `meta.md` 的 `summary` 中写一句任务概述
+- 如需要跨线程续做，在 `always_load` 中补 1 到 3 条短事实
+- 只写已确认事实，不写推断性状态
+
 输出重点：
 
 - 任务已创建
@@ -28,11 +34,18 @@
 规则：
 
 1. 确定当前仓库路径和当前分支
-2. 遍历 `.tasks/*/meta.md`
-3. 用 `repositories[].path + repositories[].branch` 匹配任务
-4. 命中 1 个任务则展示摘要
-5. 命中 0 个任务则提示当前分支未绑定任务
-6. 命中多个任务则提示数据异常
+2. 读取全局配置，确定 `project_root`
+3. 只在 `<project_root>/.tasks/*/meta.md` 下匹配
+4. 用 `repositories[].path + repositories[].branch` 匹配任务
+5. 命中 1 个任务则展示摘要
+6. 命中 0 个任务则提示当前分支未绑定任务
+7. 命中多个任务则提示数据异常
+
+不要：
+
+- 扫描整个用户目录
+- 额外扫描无关的 `.tasks` 位置
+- 输出 `pwd`、`find`、文件浏览计数等中间细节
 
 ## `/sg-task show --load`
 
@@ -41,9 +54,12 @@
 规则：
 
 1. 先执行 `/sg-task show` 定位任务
-2. 读取 `meta.md`
-3. 根据 `context_refs` 精确读取关键区块
+2. 只读取命中的 `meta.md`
+3. 默认输出 `summary + always_load + 文档列表`
 4. 只有用户明确要求时，才继续深读完整原文
+5. 若存在 `deep_links` / `context_refs`，优先按这些导航深读
+6. 成功时不要播报定位过程，只直接给结果
+7. 失败时再说明关键排查信息
 
 ## `/sg-task doc product`
 
