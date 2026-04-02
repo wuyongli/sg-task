@@ -171,6 +171,32 @@
           "pattern": "auto_commit|/sg-task sync|手动"
         }
       ]
+    },
+    {
+      "id": 13,
+      "name": "自动同步不是后台守护进程",
+      "prompt": "为什么我开了 auto_commit 很久，任务文档还是没自动提交？",
+      "expected_output": "应该说明 auto_commit 不是后台定时器，而是在 sg-task 写入任务文档后立即尝试同步；如果是手工改文档或之前漏掉了，需要执行 /sg-task sync 补同步。",
+      "assertions": [
+        {
+          "text": "强调不是后台守护",
+          "type": "output_contains",
+          "pattern": "不是后台|写入任务文档后|/sg-task sync"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "name": "同步范围仅限任务文档",
+      "prompt": "自动同步任务文档时，Git 应该怎么提交？",
+      "expected_output": "应该只同步 .tasks 目录，优先调用脚本处理，不应使用 git add -A 把整个项目的其他改动一起提交。",
+      "assertions": [
+        {
+          "text": "强调只同步 .tasks",
+          "type": "output_contains",
+          "pattern": "\\.tasks|git add -A|整个项目"
+        }
+      ]
     }
   ]
 }

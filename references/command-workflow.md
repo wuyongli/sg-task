@@ -14,6 +14,7 @@
 6. 某仓库没有可绑定分支时，要求先切换或创建分支
 7. 生成任务目录和 `meta.md`
 8. 按需建议创建 `product.md`、`development.md`、`api.md`
+9. 如果 `auto_commit: true`，写入完成后立即同步 `.tasks`
 
 建议：
 
@@ -72,6 +73,10 @@
 - 不在本次范围事项
 - 验收标准
 
+写入完成后：
+
+- 如果 `auto_commit: true`，立即同步 `.tasks`
+
 ## `/sg-task doc development`
 
 重点补这些区块：
@@ -84,9 +89,17 @@
 - 阻塞问题
 - 下一步计划
 
+写入完成后：
+
+- 如果 `auto_commit: true`，立即同步 `.tasks`
+
 ## `/sg-task doc api`
 
 只在存在明确联调边界时创建或补全。
+
+写入完成后：
+
+- 如果 `auto_commit: true`，立即同步 `.tasks`
 
 ## `/sg-task add-repo`
 
@@ -99,10 +112,16 @@
 3. 读取该仓库当前分支
 4. 分支存在时写入 `meta.md`
 5. 分支不可绑定时拒绝写入
+6. 如果 `auto_commit: true`，写入完成后立即同步 `.tasks`
 
 ## `/sg-task remove-repo`
 
 用途：从当前任务移除仓库映射。
+
+规则：
+
+1. 更新 `meta.md`
+2. 如果 `auto_commit: true`，写入完成后立即同步 `.tasks`
 
 ## `/sg-task progress`
 
@@ -128,6 +147,7 @@
 1. 定位当前任务
 2. 将 `meta.md` 状态改为 `completed`
 3. 提示补最终测试结果或交付说明
+4. 如果 `auto_commit: true`，写入完成后立即同步 `.tasks`
 
 ## `/sg-task add-repo-config`
 
@@ -141,4 +161,12 @@
 
 ## `/sg-task sync`
 
-用途：当 `auto_commit: false` 时，手动将 `.tasks` 目录中的文档变更提交到 Git。
+用途：手动将 `.tasks` 目录中的文档变更提交到 Git。
+
+规则：
+
+1. 读取全局配置中的 `project_root`
+2. 调用 `python3 scripts/sync_task_docs.py --project-root <project_root>`
+3. `auto_push: true` 时追加 `--push`
+4. 任务已知时，可补充 `--task-name` 或 `--task-id` 生成更清晰的提交信息
+5. 只同步 `.tasks`，不要提交项目里的其他代码改动

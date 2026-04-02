@@ -173,6 +173,13 @@ description: 任务中心的 AI 多仓库上下文管理技能。用于需求任
 
 Git 是文档留痕与备份层，不是使用 sg-task 的主流程。
 
+要求：
+
+- `auto_commit: true` 指任务文档写入命令结束后立即尝试同步，不表示存在长期后台守护进程
+- 自动同步和手动同步都只处理 `.tasks`，不要顺带提交整个项目的其他改动
+- 优先调用脚本 `scripts/sync_task_docs.py`，不要临时拼接一套新的 Git 命令
+- 当用户在 AI 之外手动改了文档，或之前同步遗漏时，可使用 `/sg-task sync` 补同步
+
 详细规则见：
 
 - [references/git-sync.md](references/git-sync.md)

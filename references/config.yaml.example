@@ -28,6 +28,10 @@ repositories:
 auto_commit: true
 auto_push: true
 
+# `auto_commit` 表示在 sg-task 写入任务文档后立即尝试同步
+# 不是后台定时器，也不会自动提交 AI 之外的手工改动
+# 自动或手动同步都只应处理 `.tasks`
+
 # 仓库类型：
 # backend / pc / mobile / mini-program / native / other
 #

@@ -26,6 +26,8 @@ sg-task/
 ├── SKILL.md
 ├── agents/
 │   └── openai.yaml
+├── scripts/
+│   └── sync_task_docs.py
 ├── references/
 │   ├── meta.md
 │   ├── product.md
@@ -136,10 +138,11 @@ sg-task/
 
 Git 在这套 skill 中的定位是任务文档留痕和备份。
 
-- `auto_commit: true` 时自动提交
+- `auto_commit: true` 不是后台定时器，而是在任务文档写入命令结束后立即尝试同步
 - `auto_push: true` 时提交后尝试推送
 - 推送失败时只提示“已提交到本地”
 - `auto_commit: false` 时可通过 `/sg-task sync` 手动备份
+- 同步范围只应包含 `.tasks`，不能顺手提交整个项目的其他改动
 
 详细规则见：
 
@@ -158,3 +161,4 @@ Git 在这套 skill 中的定位是任务文档留痕和备份。
 - 当前分支反查任务
 - `show --load` 的轻量加载与按需深读
 - 手动备份模式
+- 自动同步不是后台守护进程
