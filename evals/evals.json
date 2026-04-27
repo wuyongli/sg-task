@@ -4,21 +4,21 @@
     {
       "id": 1,
       "name": "首次初始化仓库命名",
-      "prompt": "这是我第一次使用 sg-task，帮我初始化仓库配置，把 pf-backend 命名成“批发后端”，把 senguo-pf-easy-mobile 命名成“批发移动端”。",
+      "prompt": "这是我第一次使用 sg-task，帮我初始化仓库配置，把 pf-backend 命名成“批发后端”，把 senguo-pf-easy-mobile 命名成“批发手机前端”，把 pf-mproducer-supplier 命名成“产地手机前端”。",
       "expected_output": "应该进入首次初始化流程，为仓库写入 name、key、type、path，后续创建任务时直接复用这些名称。",
       "assertions": [
         {
           "text": "配置包含业务名称",
           "type": "output_contains",
-          "pattern": "批发后端|批发移动端"
+          "pattern": "批发后端|批发手机前端|产地手机前端"
         }
       ]
     },
     {
       "id": 2,
       "name": "创建任务并绑定仓库分支",
-      "prompt": "我在批发后端和移动端都已经切到登录优化分支了，帮我创建一个“优化登录”任务。",
-      "expected_output": "应该直接读取已配置的仓库显示名和标识，创建任务目录和 meta.md，并记录任务与两个仓库当前分支的绑定关系。",
+      "prompt": "我在批发后端、批发手机前端和产地手机前端都已经切到登录优化分支了，帮我创建一个“优化登录”任务。",
+      "expected_output": "应该直接读取已配置的仓库显示名和标识，创建任务目录和 meta.md，并记录任务与三个仓库当前分支的绑定关系。",
       "assertions": [
         {
           "text": "创建任务目录",

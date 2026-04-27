@@ -10,10 +10,15 @@ repositories:
     type: backend
     path: /path/to/your-project-root/pf-backend
 
-  - name: 批发移动端
+  - name: 批发手机前端
     key: senguo-pf-easy-mobile
     type: mobile
     path: /path/to/your-project-root/senguo-pf-easy-mobile
+
+  - name: 产地手机前端
+    key: pf-mproducer-supplier
+    type: mobile
+    path: /path/to/your-project-root/pf-mproducer-supplier
 
   - name: 批发PC端
     key: senguo-pf-manage-frontend

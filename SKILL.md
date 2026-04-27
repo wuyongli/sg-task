@@ -195,7 +195,8 @@ Git 是文档留痕与备份层，不是使用 sg-task 的主流程。
 例如：
 
 - `批发后端 (pf-backend, backend)`
-- `批发移动端 (senguo-pf-easy-mobile, mobile)`
+- `批发手机前端 (senguo-pf-easy-mobile, mobile)`
+- `产地手机前端 (pf-mproducer-supplier, mobile)`
 
 ## 异常处理
 
